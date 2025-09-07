@@ -1,0 +1,46 @@
+---
+import Layout from "../layouts/DashboardLayout.astro";
+import Clock from "../react/Clock";
+---
+<Layout title="Intake">
+  <div class="max-w-4xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold">Select thermoformer</h2>
+      <Clock client:load />
+    </div>
+
+  <!-- Responsive: column en móvil, row centrado en sm+ -->
+  <div class="flex flex-col sm:flex-row items-center justify-center gap-5 w-full">
+  <!-- Botón Thermoformer 1 -->
+  <a
+    href="/intake/thermoformer-1"
+    class="w-full sm:w-[260px] h-[120px] 
+           rounded-xl text-white font-semibold text-lg
+           bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700
+           shadow-lg shadow-blue-900/20
+           hover:from-blue-400 hover:via-blue-600 hover:to-blue-800
+           active:scale-[0.98]
+       transition flex items-center justify-center"
+  >
+    THERMOFORMER 1
+  </a>
+
+  <!-- Botón Thermoformer 2 -->
+  <a
+    href="/intake/thermoformer-2"
+    class="w-full sm:w-[260px] h-[120px]
+           rounded-xl text-white font-semibold text-lg
+           bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700
+           shadow-lg shadow-blue-900/20
+           hover:from-blue-400 hover:via-blue-600 hover:to-blue-800
+           active:scale-[0.98]
+           transition flex items-center justify-center"
+  >
+    THERMOFORMER 2
+  </a>
+</div>
+
+
+    <p class="text-sm opacity-75">Mobile ready: large touch targets, gradients, and focus ring for accessibility.</p>
+  </div>
+</Layout>

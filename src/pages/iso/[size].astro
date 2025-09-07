@@ -1,0 +1,36 @@
+---
+import Layout from "../../layouts/DashboardLayout.astro";
+import GetISOBySize from "../../react/GetISOBySize";
+
+const sizes = [22, 25, 27, 30] as const;                   // 👈 literales
+const param = Astro.params.size ?? "";
+const num = Number(param);
+
+// ¿es un size válido?
+const valid = sizes.includes(num as (typeof sizes)[number]);
+
+// Si es válido, lo casteamos al tipo literal
+const sizeLiteral = valid ? (num as (typeof sizes)[number]) : null;
+---
+
+<Layout title={`Get ISO • Size ${valid ? num : ""}`}>
+  <div class="max-w-5xl mx-auto">
+    {valid ? (
+      <>
+        <h2 class="text-lg font-semibold mb-4">
+          Size {num} — choose shift & thermoformer
+        </h2>
+        {/* 👇 aquí usamos ! para quitar null */}
+        <GetISOBySize client:load size={sizeLiteral!} />
+      </>
+    ) : (
+      <>
+        <h2 class="text-lg font-semibold mb-2">Invalid size</h2>
+        <p class="opacity-80">Valid sizes: 22, 25, 27, 30.</p>
+      </>
+    )}
+    <a href="/iso" class="inline-block mt-6 text-blue-600 hover:underline">
+      ← Back to sizes
+    </a>
+  </div>
+</Layout>

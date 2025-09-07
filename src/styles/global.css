@@ -1,0 +1,4 @@
+@import "tailwindcss";
+/* Puedes añadir estilos propios normales si quieres */
+:root { color-scheme: light dark; }
+

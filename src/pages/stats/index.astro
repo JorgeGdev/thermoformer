@@ -1,0 +1,23 @@
+---
+import Layout from "../../layouts/DashboardLayout.astro";
+
+const btnBig =
+  "w-full h-[110px] rounded-xl text-white font-semibold text-lg " +
+  "bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 " +
+  "shadow-lg shadow-blue-900/20 hover:from-blue-400 hover:via-blue-600 hover:to-blue-800 " +
+  "active:scale-[0.98] transition flex items-center justify-center";
+---
+
+<Layout title="Statistics • Select Thermoformer">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-xl font-semibold mb-6">Statistics — choose thermoformer</h1>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <a href="/stats/thermoformer-1" class={btnBig}>THERMOFORMER 1</a>
+      <a href="/stats/thermoformer-2" class={btnBig}>THERMOFORMER 2</a>
+      <a href="/stats/thermoformer-all" class={btnBig}>BOTH</a>
+    </div>
+
+    <a href="/" class="inline-block mt-6 text-blue-600 hover:underline">← Back</a>
+  </div>
+</Layout>

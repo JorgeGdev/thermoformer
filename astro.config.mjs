@@ -9,6 +9,10 @@ export default defineConfig({
   adapter: node({
     mode: 'standalone'       // ⬅️ Para Railway
   }),
+  server: {
+    port: process.env.PORT ? parseInt(process.env.PORT) : 4321,
+    host: '0.0.0.0'
+  },
   integrations: [react()],
   vite: { plugins: [tailwindcss()] },
 });

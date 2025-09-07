@@ -10,31 +10,133 @@ const { title = "Dashboard" } = Astro.props;
   </head>
   <body class="h-screen bg-white text-slate-900 dark:bg-black dark:text-slate-100">
     <div class="flex h-full">
-      <!-- Sidebar -->
-      <aside class="w-56 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
-        <div class="p-4 font-semibold text-blue-600 dark:text-blue-400">Plixies</div>
+      <!-- Mobile Menu Overlay -->
+      <div id="mobile-overlay" class="fixed inset-0 z-40 bg-black/50 hidden lg:hidden">
+      </div>
+
+      <!-- Sidebar - Hidden on mobile, slide in when open -->
+      <aside id="sidebar" class="fixed lg:relative z-50 w-56 h-full transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 lg:flex lg:shrink-0">
+        <!-- Mobile header with close button -->
+        <div class="flex items-center justify-between p-4 lg:block">
+          <div class="font-semibold text-blue-600 dark:text-blue-400">Plixies</div>
+          <button 
+            id="close-menu" 
+            class="lg:hidden p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Navigation -->
         <nav class="px-2 space-y-1 text-sm">
-          <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white" href="/">Home</a>
-          <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white" href="/intake">Intake</a>
-          <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white" href="/iso">Get ISO</a>
-          <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white" href="/packages">Packages</a>
-          <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white" href="/stats">Stats</a>
+          <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white transition-colors" href="/">Home</a>
+          <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white transition-colors" href="/intake">Intake</a>
+          <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white transition-colors" href="/iso">Get ISO</a>
+          <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white transition-colors" href="/rolls">Rolls Images</a>
+          <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white transition-colors" href="/stats">Stats</a>
         </nav>
       </aside>
 
+      <!-- Main content -->
       <div class="flex-1 flex flex-col min-w-0">
+        <!-- Header with hamburger menu -->
         <header class="flex items-center justify-between px-4 h-14 border-b border-slate-200 dark:border-slate-800">
-          <h1 class="text-base font-medium">{title}</h1>
+          <div class="flex items-center gap-3">
+            <!-- Hamburger menu button - only visible on mobile -->
+            <button 
+              id="hamburger-menu" 
+              class="lg:hidden p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            </button>
+            <h1 class="text-base font-medium">{title}</h1>
+          </div>
+          
+          <!-- Dark mode toggle -->
           <button
-            class="rounded px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700"
-            onclick="document.documentElement.classList.toggle('dark')"
-          >Dark</button>
+            id="dark-toggle"
+            class="rounded px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Dark
+          </button>
         </header>
 
-        <main class="p-4 overflow-auto">
+        <!-- Main content area -->
+        <main class="p-4 overflow-auto flex-1">
           <slot />
         </main>
       </div>
     </div>
+
+    <!-- JavaScript for mobile menu -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobile-overlay');
+        const closeMenu = document.getElementById('close-menu');
+        const darkToggle = document.getElementById('dark-toggle');
+
+        // Open mobile menu
+        function openMenu() {
+          if (sidebar && overlay) {
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
+            overlay.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+          }
+        }
+
+        // Close mobile menu
+        function closeMenuFn() {
+          if (sidebar && overlay) {
+            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('translate-x-0');
+            overlay.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+          }
+        }
+
+        // Event listeners
+        hamburgerMenu?.addEventListener('click', openMenu);
+        closeMenu?.addEventListener('click', closeMenuFn);
+        overlay?.addEventListener('click', closeMenuFn);
+
+        // Close menu when clicking on navigation links (mobile)
+        if (sidebar) {
+          const navLinks = sidebar.querySelectorAll('nav a');
+          navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+              if (window.innerWidth < 1024) { // lg breakpoint
+                closeMenuFn();
+              }
+            });
+          });
+        }
+
+        // Dark mode toggle
+        darkToggle?.addEventListener('click', function() {
+          document.documentElement.classList.toggle('dark');
+        });
+
+        // Close menu on window resize to desktop
+        window.addEventListener('resize', function() {
+          if (window.innerWidth >= 1024) { // lg breakpoint
+            closeMenuFn();
+          }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') {
+            closeMenuFn();
+          }
+        });
+      });
+    </script>
   </body>
 </html>

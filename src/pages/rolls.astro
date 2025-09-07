@@ -1,0 +1,11 @@
+---
+import Layout from "../layouts/DashboardLayout.astro";
+import RollsGallery from "../react/RollsGallery";
+---
+
+<Layout title="Roll Images">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <h2 class="text-xl font-semibold">Roll Stickers Viewer</h2>
+    <RollsGallery client:load />
+  </div>
+</Layout>

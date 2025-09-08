@@ -18,12 +18,11 @@ RUN npm run build
 # Remove dev dependencies after build
 RUN npm ci --production=true && npm cache clean --force
 
-# Set environment variables
-ENV HOST=0.0.0.0
-ENV PORT=4321
+# Create a simple start script
+RUN echo '#!/bin/sh\nexport PORT=${PORT:-4321}\nexport HOST=0.0.0.0\necho "Starting on $HOST:$PORT"\nnode ./dist/server/entry.mjs' > /app/start.sh && chmod +x /app/start.sh
 
 # Expose port 4321 (Railway will map it to their port)
 EXPOSE 4321
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["/app/start.sh"]

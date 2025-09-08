@@ -2,137 +2,160 @@
 export const prerender = false;
 
 import { createClient } from "@supabase/supabase-js";
+import { nzRangeUTC, nzHourLabel } from "../../lib/nzTime";
 
-const supabase = createClient(
-  import.meta.env.SUPABASE_URL!,
-  import.meta.env.SUPABASE_SERVICE_ROLE!
-);
+const SUPABASE_URL = import.meta.env.SUPABASE_URL as string;
+const SUPABASE_SERVICE_ROLE = import.meta.env.SUPABASE_SERVICE_ROLE as string;
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 
-function json(obj: unknown, status = 200) {
-  return new Response(JSON.stringify(obj), {
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
     status,
     headers: { "Content-Type": "application/json" },
   });
 }
 
-type Range = "day" | "week" | "month";
-type Thermo = "1" | "2" | "all";
-type Size = 22 | 25 | 27 | 30 | "all";
-type Shift = "DS" | "TW" | "NS" | "all";
+type RangeKind = "day" | "week" | "month";
+type Shift = "DS" | "TW" | "NS";
 
-/** Calcula el rango en UTC */
-function rangeUTC(range: Range) {
-  const now = new Date();
-  let start = new Date(now);
-  let end = new Date(now);
-
-  if (range === "day") {
-    start.setUTCHours(0, 0, 0, 0);
-    end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + 1);
-  } else if (range === "week") {
-    const dow = now.getUTCDay(); // domingo=0
-    start.setUTCDate(now.getUTCDate() - dow);
-    start.setUTCHours(0, 0, 0, 0);
-    end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + 7);
-  } else {
-    start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-    end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-  }
-  return { startUTC: start, endUTC: end };
-}
+type StatsRequest = {
+  range: RangeKind;
+  thermo?: 1 | 2 | null;
+  size?: 22 | 25 | 27 | 30 | null;
+  shift?: Shift | null;
+  page?: number;
+  limit?: number;
+};
 
 export async function POST({ request }: { request: Request }) {
   try {
-    const body = await request.json().catch(() => ({}));
-    const thermo: Thermo = body?.thermo ?? "1";
-    const range: Range = body?.range ?? "day";
-    const size: Size = body?.size ?? "all";
-    const shift: Shift = body?.shift ?? "all";
-    const page = Number(body?.page ?? 1);
-    const limit = Math.min(Math.max(Number(body?.limit ?? 50), 10), 200);
+    const body = (await request.json()) as StatsRequest;
+
+    const range: RangeKind = body.range ?? "day";
+    const thermo = body.thermo ?? null;
+    const size = body.size ?? null;
+    const shift = body.shift ?? null;
+
+    const page = Math.max(1, Number(body.page ?? 1));
+    const limit = Math.min(100, Math.max(10, Number(body.limit ?? 20)));
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    const { startUTC, endUTC } = rangeUTC(range);
+    // Rango NZ en UTC
+    const { start, end } = nzRangeUTC(range);
 
-    // 1) Query base
-    let q = supabase
-      .from("v_packets_full")
-      .select(
-        `id, iso_number, size, shift, thermoformer_number,
-         raw_materials, batch_number, box_number,
-         packet_index, pallet_number, iso_date, created_at`,
-        { count: "exact" }
-      )
-      .gte("created_at", startUTC.toISOString())
-      .lt("created_at", endUTC.toISOString())
-      .order("created_at", { ascending: true })
-      .range(from, to);
+    // ---------- 1) KPIs: packets total ----------
+    let packetsQ = supabase
+      .from("packets")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", start)
+      .lt("created_at", end);
 
-    if (thermo === "1" || thermo === "2") q = q.eq("thermoformer_number", Number(thermo));
-    if (size !== "all") q = q.eq("size", Number(size));
-    if (shift !== "all") q = q.eq("shift", shift);
+    if (thermo) packetsQ = packetsQ.eq("thermoformer_number", thermo);
+    if (size) packetsQ = packetsQ.eq("size", size);
+    if (shift) packetsQ = packetsQ.eq("shift", shift);
 
-    const { data: rows, error, count } = await q;
-    if (error) return json({ error: error.message }, 500);
+    const packetsRes = await packetsQ;
+    const packetsTotal = packetsRes.count ?? 0;
 
-    // 2) KPIs
-    const packetsTotal = count ?? 0;
-
+    // ---------- 2) Pallets abiertos en rango ----------
     let palletsOpenedQ = supabase
       .from("pallets")
       .select("id", { count: "exact", head: true })
-      .gte("opened_at", startUTC.toISOString())
-      .lt("opened_at", endUTC.toISOString());
+      .gte("opened_at", start)
+      .lt("opened_at", end);
 
+    if (thermo) palletsOpenedQ = palletsOpenedQ.eq("thermoformer_number", thermo);
+    if (size) palletsOpenedQ = palletsOpenedQ.eq("size", size);
+
+    const palletsOpenedRes = await palletsOpenedQ;
+    const palletsOpened = palletsOpenedRes.count ?? 0;
+
+    // ---------- 3) Pallets cerrados en rango ----------
     let palletsClosedQ = supabase
       .from("pallets")
       .select("id", { count: "exact", head: true })
-      .gte("closed_at", startUTC.toISOString())
-      .lt("closed_at", endUTC.toISOString());
+      .not("closed_at", "is", null)
+      .gte("closed_at", start)
+      .lt("closed_at", end);
 
-    if (thermo === "1" || thermo === "2") {
-      palletsOpenedQ = palletsOpenedQ.eq("thermoformer_number", Number(thermo));
-      palletsClosedQ = palletsClosedQ.eq("thermoformer_number", Number(thermo));
-    }
+    if (thermo) palletsClosedQ = palletsClosedQ.eq("thermoformer_number", thermo);
+    if (size) palletsClosedQ = palletsClosedQ.eq("size", size);
 
-    const [pOpen, pClosed] = await Promise.all([palletsOpenedQ, palletsClosedQ]);
+    const palletsClosedRes = await palletsClosedQ;
+    const palletsClosed = palletsClosedRes.count ?? 0;
 
-    const kpis = {
-      packetsTotal,
-      palletsOpenedInRange: pOpen.count ?? 0,
-      palletsClosedInRange: pClosed.count ?? 0,
-    };
+    // ---------- 4) Hourly (en NZ) ----------
+    // Traemos solo created_at para agrupar en memoria (rápido para rangos cortos)
+    let hourlyQ = supabase
+      .from("packets")
+      .select("created_at")
+      .gte("created_at", start)
+      .lt("created_at", end);
 
-    // 3) Gráficos (convertimos UTC → NZ solo para mostrar)
-    const byHour: Record<string, number> = {};
-    const byDay: Record<string, number> = {};
-    const byShift: Record<string, number> = {};
+    if (thermo) hourlyQ = hourlyQ.eq("thermoformer_number", thermo);
+    if (size) hourlyQ = hourlyQ.eq("size", size);
+    if (shift) hourlyQ = hourlyQ.eq("shift", shift);
 
-    for (const r of rows ?? []) {
-      const nz = new Date(new Date(r.created_at).toLocaleString("en-NZ", { timeZone: "Pacific/Auckland" }));
-      const hour = String(nz.getHours()).padStart(2, "0");
-      byHour[hour] = (byHour[hour] ?? 0) + 1;
+    const hourlyRes = await hourlyQ;
+    const byHour = new Map<string, number>();
+    for (let h = 0; h < 24; h++) byHour.set(String(h).padStart(2, "0"), 0);
 
-      const day = nz.toISOString().slice(0, 10);
-      byDay[day] = (byDay[day] ?? 0) + 1;
+    (hourlyRes.data ?? []).forEach((r) => {
+      const hh = nzHourLabel(r.created_at as string);
+      byHour.set(hh, (byHour.get(hh) ?? 0) + 1);
+    });
 
-      const s = r.shift || "UNK";
-      byShift[s] = (byShift[s] ?? 0) + 1;
-    }
+    const hourly = Array.from(byHour.entries())
+      .map(([hour, count]) => ({ hour, count }))
+      .sort((a, b) => a.hour.localeCompare(b.hour));
 
-    const hourly = Object.keys(byHour).sort().map((h) => ({ hour: h, count: byHour[h] }));
-    const daily = Object.keys(byDay).sort().map((d) => ({ day: d, count: byDay[d] }));
-    const shifts = Object.keys(byShift).map((s) => ({ shift: s, count: byShift[s] }));
+    // ---------- 5) Tabla detallada (con paginación) ----------
+    // Seleccionamos pallets(pallet_number) como relación embebida: devuelve array.
+    let tableQ = supabase
+      .from("packets")
+      .select(
+        "id, iso_number, size, shift, thermoformer_number, raw_materials, batch_number, box_number, packet_index, iso_date, created_at, pallet_id, pallets(pallet_number)",
+        { count: "exact" }
+      )
+      .gte("created_at", start)
+      .lt("created_at", end)
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
-    // 4) Tabla
-    const table = (rows ?? []).map((r) => {
-      const nz = new Date(new Date(r.created_at).toLocaleString("en-NZ", { timeZone: "Pacific/Auckland" }));
-      const date = nz.toISOString().slice(0, 10);
-      const time = nz.toTimeString().slice(0, 5);
+    if (thermo) tableQ = tableQ.eq("thermoformer_number", thermo);
+    if (size) tableQ = tableQ.eq("size", size);
+    if (shift) tableQ = tableQ.eq("shift", shift);
+
+    const tableRes = await tableQ;
+
+    if (tableRes.error) throw tableRes.error;
+
+    const total = tableRes.count ?? 0;
+
+    const rows = (tableRes.data ?? []).map((r: any) => {
+      const pallet_number =
+        Array.isArray(r.pallets) && r.pallets.length
+          ? r.pallets[0].pallet_number
+          : null;
+
+      // Fecha/Hora legible (NZ)
+      const dt = new Date(r.created_at);
+      const dateNZ = new Intl.DateTimeFormat("en-NZ", {
+        timeZone: "Pacific/Auckland",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(dt);
+      const hourNZ = new Intl.DateTimeFormat("en-NZ", {
+        timeZone: "Pacific/Auckland",
+        hourCycle: "h23",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(dt);
+
       return {
+        id: r.id,
         iso_number: r.iso_number,
         thermoformer_number: r.thermoformer_number,
         raw_materials: r.raw_materials,
@@ -140,28 +163,23 @@ export async function POST({ request }: { request: Request }) {
         box_number: r.box_number,
         size: r.size,
         shift: r.shift,
-        pallet: r.pallet_number ?? null,
-        packet_of_24: `${r.packet_index}/24`,
-        date,
-        time,
+        pallet: pallet_number,
+        packet_index: r.packet_index, // 1..24
+        iso_date: r.iso_date,
+        date: dateNZ,
+        hour: hourNZ,
       };
     });
 
     return json({
       ok: true,
-      kpis,
-      charts: { hourly, daily, shifts },
-      table,
-      pagination: {
-        page,
-        limit,
-        total: count ?? 0,
-        pages: Math.ceil((count ?? 0) / limit),
-        startUTC: startUTC.toISOString(),
-        endUTC: endUTC.toISOString(),
-      },
+      kpis: { packetsTotal, palletsOpened, palletsClosed },
+      hourly,
+      table: { rows, total, page, limit },
+      range: { start, end },
     });
-  } catch (e: any) {
-    return json({ error: e?.message ?? "stats error" }, 500);
+  } catch (err: any) {
+    console.error("[stats] error:", err?.message);
+    return json({ ok: false, error: err?.message ?? "stats error" }, 500);
   }
 }

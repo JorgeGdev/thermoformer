@@ -7,15 +7,119 @@ const { title = "Dashboard" } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title} • Plixies</title>
+    <style>
+      /* Dark Mode Toggle Styles */
+      .dark-toggle {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        width: 52px;
+        height: 28px;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
+      }
+      
+      .dark-toggle.dark {
+        background: linear-gradient(135deg, #1e293b, #334155);
+        box-shadow: 0 2px 8px rgba(30, 41, 59, 0.4);
+      }
+      
+      .dark-toggle-slider {
+        position: absolute;
+        left: 2px;
+        top: 2px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      
+      .dark-toggle.dark .dark-toggle-slider {
+        transform: translateX(24px);
+        background: #64748b;
+      }
+      
+      .toggle-icon {
+        width: 12px;
+        height: 12px;
+        transition: all 0.4s ease;
+      }
+      
+      .sun-icon {
+        color: #f59e0b;
+        opacity: 1;
+      }
+      
+      .moon-icon {
+        color: #e2e8f0;
+        opacity: 0;
+        position: absolute;
+      }
+      
+      .dark .sun-icon {
+        opacity: 0;
+        transform: rotate(180deg);
+      }
+      
+      .dark .moon-icon {
+        opacity: 1;
+        transform: rotate(0deg);
+      }
+      
+      .dark-toggle:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+      }
+      
+      .dark-toggle.dark:hover {
+        box-shadow: 0 4px 12px rgba(30, 41, 59, 0.6);
+      }
+      
+      .dark-toggle:active {
+        transform: scale(0.95);
+      }
+
+      .mode-text {
+        margin-left: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: none;
+      }
+
+      @media (min-width: 640px) {
+        .mode-text {
+          display: block;
+        }
+      }
+      
+      .mode-text.light {
+        color: #f59e0b;
+      }
+      
+      .mode-text.dark {
+        color: #94a3b8;
+      }
+    </style>
   </head>
-  <body class="h-screen bg-white text-slate-900 dark:bg-black dark:text-slate-100">
+  <body class="h-screen bg-sky-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300">
     <div class="flex h-full">
       <!-- Mobile Menu Overlay -->
       <div id="mobile-overlay" class="fixed inset-0 z-40 bg-black/50 hidden lg:hidden">
       </div>
 
       <!-- Sidebar - Hidden on mobile, slide in when open -->
-      <aside id="sidebar" class="fixed lg:relative z-50 w-56 h-full transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 lg:flex lg:shrink-0">
+      <aside id="sidebar" class="fixed lg:relative z-50 w-56 h-full transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 lg:flex lg:shrink-0">
         <!-- Mobile header with close button -->
         <div class="flex items-center justify-between p-4 lg:block">
           <div class="font-semibold text-blue-600 dark:text-blue-400">Plixies</div>
@@ -42,7 +146,7 @@ const { title = "Dashboard" } = Astro.props;
       <!-- Main content -->
       <div class="flex-1 flex flex-col min-w-0">
         <!-- Header with hamburger menu -->
-        <header class="flex items-center justify-between px-4 h-14 border-b border-slate-200 dark:border-slate-800">
+        <header class="flex items-center justify-between px-4 h-14 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 transition-colors duration-300">
           <div class="flex items-center gap-3">
             <!-- Hamburger menu button - only visible on mobile -->
             <button 
@@ -56,13 +160,29 @@ const { title = "Dashboard" } = Astro.props;
             <h1 class="text-base font-medium">{title}</h1>
           </div>
           
-          <!-- Dark mode toggle -->
-          <button
-            id="dark-toggle"
-            class="rounded px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Dark
-          </button>
+          <!-- Dark mode toggle mejorado -->
+          <div class="flex items-center">
+            <button
+              id="dark-toggle"
+              class="dark-toggle"
+              aria-label="Toggle dark mode"
+              role="switch"
+            >
+              <div class="dark-toggle-slider">
+                <div class="toggle-icon sun-icon">
+                  <svg fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div class="toggle-icon moon-icon">
+                  <svg fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                  </svg>
+                </div>
+              </div>
+            </button>
+            <span class="mode-text light" id="mode-text">Light</span>
+          </div>
         </header>
 
         <!-- Main content area -->
@@ -80,6 +200,7 @@ const { title = "Dashboard" } = Astro.props;
         const overlay = document.getElementById('mobile-overlay');
         const closeMenu = document.getElementById('close-menu');
         const darkToggle = document.getElementById('dark-toggle');
+        const modeText = document.getElementById('mode-text');
 
         // Open mobile menu
         function openMenu() {
@@ -101,10 +222,43 @@ const { title = "Dashboard" } = Astro.props;
           }
         }
 
+        // Dark mode toggle functions
+        function updateToggleState() {
+          const isDark = document.documentElement.classList.contains('dark');
+          
+          if (darkToggle && modeText) {
+            if (isDark) {
+              darkToggle.classList.add('dark');
+              modeText.textContent = 'Dark';
+              modeText.className = 'mode-text dark';
+            } else {
+              darkToggle.classList.remove('dark');
+              modeText.textContent = 'Light';
+              modeText.className = 'mode-text light';
+            }
+          }
+        }
+
         // Event listeners
         hamburgerMenu?.addEventListener('click', openMenu);
         closeMenu?.addEventListener('click', closeMenuFn);
         overlay?.addEventListener('click', closeMenuFn);
+
+        // Dark mode toggle with localStorage
+        darkToggle?.addEventListener('click', function() {
+          const isDark = document.documentElement.classList.toggle('dark');
+          localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+          updateToggleState();
+        });
+
+        // Load dark mode preference from localStorage
+        const savedDarkMode = localStorage.getItem('darkMode');
+        if (savedDarkMode === 'enabled') {
+          document.documentElement.classList.add('dark');
+        }
+        
+        // Initialize toggle state
+        updateToggleState();
 
         // Close menu when clicking on navigation links (mobile)
         if (sidebar) {
@@ -117,11 +271,6 @@ const { title = "Dashboard" } = Astro.props;
             });
           });
         }
-
-        // Dark mode toggle
-        darkToggle?.addEventListener('click', function() {
-          document.documentElement.classList.toggle('dark');
-        });
 
         // Close menu on window resize to desktop
         window.addEventListener('resize', function() {

@@ -2,10 +2,11 @@
 export const prerender = false;
 
 import { createClient } from "@supabase/supabase-js";
+import { nzRangeUTC } from "../../lib/nzTime";
 
-const url = import.meta.env.SUPABASE_URL!;
-const service = import.meta.env.SUPABASE_SERVICE_ROLE!;
-const supabase = createClient(url, service);
+const SUPABASE_URL = import.meta.env.SUPABASE_URL as string;
+const SUPABASE_SERVICE_ROLE = import.meta.env.SUPABASE_SERVICE_ROLE as string;
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -14,31 +15,10 @@ function json(data: unknown, status = 200) {
   });
 }
 
-// Simple: calculamos rangos en UTC (si quieres NZT luego ajustamos)
-function getRangeBounds(range: "day" | "week" | "month") {
-  const now = new Date();
-  let start: Date;
-  let end: Date;
-
-  if (range === "day") {
-    start = new Date(now);
-    start.setUTCHours(0, 0, 0, 0);
-    end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + 1);
-  } else if (range === "week") {
-    const day = now.getUTCDay(); // 0=domingo
-    start = new Date(now);
-    start.setUTCDate(start.getUTCDate() - day);
-    start.setUTCHours(0, 0, 0, 0);
-    end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + 7);
-  } else {
-    // month
-    start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-    end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-  }
-
-  return { start: start.toISOString(), end: end.toISOString() };
+function normalizePath(p: string) {
+  return String(p ?? "")
+    .replace(/^\/?rolls\//i, "") // quita 'rolls/' si alguien lo guardó de más
+    .replace(/^\/+/, "");
 }
 
 export async function POST({ request }: { request: Request }) {
@@ -47,9 +27,10 @@ export async function POST({ request }: { request: Request }) {
       range: "day" | "week" | "month";
     };
 
-    const { start, end } = getRangeBounds(range);
+    const { start, end } = nzRangeUTC(
+      range === "day" ? "day" : range === "week" ? "week" : "month"
+    );
 
-    // 1) Traemos los últimos rolls con foto en ventana de tiempo
     const { data: rows, error } = await supabase
       .from("rolls")
       .select(
@@ -57,28 +38,19 @@ export async function POST({ request }: { request: Request }) {
       )
       .gte("created_at", start)
       .lt("created_at", end)
-      .is("photo_path", null) // truco para que PostgREST no excluya; lo cambiamos de inmediato con .not()
       .order("created_at", { ascending: false });
 
-    // Nota: .is("photo_path", null) + .not("photo_path", "is", null) no pueden encadenarse
-    // en el mismo builder, así que hacemos otra query si lo quieres súper estricto.
-    // Para simplificar, filtramos en JS abajo:
     if (error) throw error;
 
     const onlyWithPhoto = (rows ?? []).filter((r) => r.photo_path);
 
-    // 2) Pedimos signed URLs contra el bucket 'rolls'
-    const signed = await Promise.all(
+    const files = await Promise.all(
       onlyWithPhoto.map(async (r) => {
-        const path = r.photo_path as string;
-        const { data: signedUrl } = await supabase
-          .storage
-          .from("rolls") // ⬅️ bucket
-          .createSignedUrl(path, 60 * 60); // 1 hora
-
+        const path = normalizePath(r.photo_path as string);
+        const pub = supabase.storage.from("rolls").getPublicUrl(path);
         return {
           id: r.id,
-          url: signedUrl?.signedUrl ?? "",
+          url: pub.data?.publicUrl ?? "",
           created_at: r.created_at,
           thermoformer_number: r.thermoformer_number,
           raw_materials: r.raw_materials,
@@ -89,9 +61,9 @@ export async function POST({ request }: { request: Request }) {
       })
     );
 
-    return json({ ok: true, files: signed });
+    return json({ ok: true, files });
   } catch (err: any) {
-    console.error("[list-rolls] error:", err.message);
-    return json({ ok: false, error: err.message }, 500);
+    console.error("[list-rolls] error:", err?.message);
+    return json({ ok: false, error: err?.message ?? "list-rolls error" }, 500);
   }
 }

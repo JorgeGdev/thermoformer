@@ -22,8 +22,8 @@ RUN npm ci --production=true && npm cache clean --force
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
-# Expose port (Railway will override with $PORT)
-EXPOSE $PORT
+# Expose port 4321 (Railway will map it to their port)
+EXPOSE 4321
 
 # Start the application
 CMD ["npm", "start"]

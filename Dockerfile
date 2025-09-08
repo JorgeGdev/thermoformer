@@ -18,8 +18,12 @@ RUN npm run build
 # Remove dev dependencies after build
 RUN npm ci --production=true && npm cache clean --force
 
-# Expose port (Railway will set the PORT env var)
-EXPOSE 3000
+# Set environment variables
+ENV HOST=0.0.0.0
+ENV PORT=4321
+
+# Expose port (Railway will override with $PORT)
+EXPOSE $PORT
 
 # Start the application
 CMD ["npm", "start"]

@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "start": "node server.mjs",
+    "start": "node ./dist/server/entry.mjs",
     "astro": "astro"
   },
   "engines": {

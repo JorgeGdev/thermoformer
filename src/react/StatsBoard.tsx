@@ -1,216 +1,167 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
+  ResponsiveContainer,
   BarChart,
   Bar,
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
 import StatsTable from "./StatsTable";
 
-type Range = "day" | "week" | "month";
-type Thermo = "1" | "2" | "all";
-type Size = 22 | 25 | 27 | 30 | "all";
-type Shift = "DS" | "TW" | "NS" | "all";
+type Range = "today" | "week" | "month";
+export type ThermoProp = "all" | 1 | 2;
+type Size = "all" | 22 | 25 | 27 | 30;
+type Shift = "all" | "DS" | "TW" | "NS";
 
-interface Kpis {
-  packetsTotal: number;
-  palletsOpenedInRange: number;
-  palletsClosedInRange: number;
-}
+type Props = { thermoformer: ThermoProp };
 
-interface Charts {
-  hourly: { hour: string; count: number }[];
-  daily: { day: string; count: number }[];
-  shifts: { shift: string; count: number }[];
-}
+export default function StatsBoard({ thermoformer }: Props) {
 
-export default function StatsBoard() {
-  const [range, setRange] = useState<Range>("day");
-  const [thermo, setThermo] = useState<Thermo>("all");
+  
+  // filtros
+  const [range, setRange] = useState<Range>("today");
   const [size, setSize] = useState<Size>("all");
   const [shift, setShift] = useState<Shift>("all");
-  const [live, setLive] = useState(false);
-  const [kpis, setKpis] = useState<Kpis | null>(null);
-  const [charts, setCharts] = useState<Charts | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [thermo, setThermo] = useState<ThermoProp>(thermoformer);
 
-  // Fetch stats
+  // KPIs + hours
+  const [loading, setLoading] = useState(false);
+  const [kpis, setKpis] = useState({
+    packetsTotal: 0,
+    palletsOpened: 0,
+    palletsClosed: 0,
+  });
+  const [hours, setHours] = useState<{ hour: number; count: number }[]>([]);
+
   async function load() {
     setLoading(true);
-    try {
-      const res = await fetch("/api/stats", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ range, thermo, size, shift }),
-      });
-      const json = await res.json();
-      if (json.ok) {
-        setKpis(json.kpis);
-        setCharts(json.charts);
-      } else {
-        console.error("Error:", json.error);
-      }
-    } catch (err) {
-      console.error("Fetch failed:", err);
-    } finally {
-      setLoading(false);
+    const res = await fetch("/api/stats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ range, thermo, size, shift }),
+    });
+    const json = await res.json();
+    setLoading(false);
+    if (!json.ok) {
+      console.error(json.error);
+      return;
     }
+    setKpis(json.kpis);
+    setHours(json.hours);
   }
+
+  useEffect(() => {
+    setThermo(thermoformer); // si entras a otra ruta /stats/thermoformer-2
+  }, [thermoformer]);
 
   useEffect(() => {
     load();
   }, [range, thermo, size, shift]);
 
-  useEffect(() => {
-    if (!live) return;
-    const id = setInterval(load, 15000);
-    return () => clearInterval(id);
-  }, [live, range, thermo, size, shift]);
+  const hourData = useMemo(
+    () =>
+      (hours || []).map((h) => ({
+        name: String(h.hour).padStart(2, "0"),
+        Packets: h.count,
+      })),
+    [hours]
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        {/* Range buttons */}
+    <div className="max-w-[1200px] mx-auto p-2 sm:p-4">
+      {/* filtros superiores */}
+      <div className="flex flex-wrap gap-2 items-center mb-4">
+        {/* rango */}
         <div className="flex gap-2">
-          {(["day", "week", "month"] as Range[]).map((r) => (
+          {(["today", "week", "month"] as Range[]).map((r) => (
             <button
               key={r}
               onClick={() => setRange(r)}
-              className={`px-3 py-1.5 rounded ${
+              className={`px-4 py-2 rounded-md ${
                 range === r
                   ? "bg-blue-600 text-white"
-                  : "bg-slate-100 dark:bg-slate-800"
+                  : "bg-slate-200 dark:bg-slate-800"
               }`}
             >
-              {r === "day" ? "Today" : r === "week" ? "Week" : "Month"}
+              {r === "today" ? "Today" : r === "week" ? "Week" : "Month"}
             </button>
           ))}
         </div>
 
-        {/* Size dropdown */}
+        {/* size */}
         <select
           value={size}
           onChange={(e) =>
-            setSize(
-              e.target.value === "all"
-                ? "all"
-                : (Number(e.target.value) as Size)
-            )
+            setSize((e.target.value as any) as Size)
           }
-          className="border border-slate-300 dark:border-slate-600 rounded px-3 py-2 bg-sky-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="ml-2 px-3 py-2 rounded-md bg-slate-200 dark:bg-slate-800"
         >
           <option value="all">All sizes</option>
-          <option value="22">Size 22</option>
-          <option value="25">Size 25</option>
-          <option value="27">Size 27</option>
-          <option value="30">Size 30</option>
+          <option value={22}>22</option>
+          <option value={25}>25</option>
+          <option value={27}>27</option>
+          <option value={30}>30</option>
         </select>
 
-        {/* Shift dropdown */}
+        {/* shift */}
         <select
           value={shift}
-          onChange={(e) => setShift(e.target.value as Shift)}
-          className="border border-slate-300 dark:border-slate-600 rounded px-3 py-2 bg-sky-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          onChange={(e) => setShift((e.target.value as any) as Shift)}
+          className="px-3 py-2 rounded-md bg-slate-200 dark:bg-slate-800"
         >
           <option value="all">All shifts</option>
-          <option value="DS">Day Shift</option>
-          <option value="TW">Twilight Shift</option>
-          <option value="NS">Night Shift</option>
+          <option value="DS">DS</option>
+          <option value="TW">TW</option>
+          <option value="NS">NS</option>
         </select>
 
-        {/* Thermo dropdown */}
+        {/* thermo */}
         <select
           value={thermo}
-          onChange={(e) => setThermo(e.target.value as Thermo)}
-          className="border border-slate-300 dark:border-slate-600 rounded px-3 py-2 bg-sky-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          onChange={(e) => setThermo((e.target.value as any) as ThermoProp)}
+          className="px-3 py-2 rounded-md bg-slate-200 dark:bg-slate-800"
         >
           <option value="all">All Thermo</option>
           <option value="1">Thermo 1</option>
           <option value="2">Thermo 2</option>
         </select>
-
-        {/* Live toggle */}
-        <label className="flex items-center gap-1 text-sm cursor-pointer">
-          <input
-            type="checkbox"
-            checked={live}
-            onChange={(e) => setLive(e.target.checked)}
-          />
-          Live
-        </label>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-lg bg-blue-50 dark:bg-slate-900 border border-blue-200">
-          <p className="text-sm text-slate-500">Packets Total</p>
-          <p className="text-2xl font-bold">
-            {loading ? "…" : kpis?.packetsTotal ?? 0}
-          </p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+        <div className="rounded-xl border border-slate-800 bg-slate-50 dark:bg-slate-900 p-4">
+          <div className="text-xs opacity-70 mb-1">Packets Total</div>
+          <div className="text-2xl font-semibold">{kpis.packetsTotal}</div>
         </div>
-        <div className="p-4 rounded-lg bg-blue-50 dark:bg-slate-900 border border-blue-200">
-          <p className="text-sm text-slate-500">Pallets Opened</p>
-          <p className="text-2xl font-bold">
-            {loading ? "…" : kpis?.palletsOpenedInRange ?? 0}
-          </p>
+        <div className="rounded-xl border border-slate-800 bg-slate-50 dark:bg-slate-900 p-4">
+          <div className="text-xs opacity-70 mb-1">Pallets Opened</div>
+          <div className="text-2xl font-semibold">{kpis.palletsOpened}</div>
         </div>
-        <div className="p-4 rounded-lg bg-blue-50 dark:bg-slate-900 border border-blue-200">
-          <p className="text-sm text-slate-500">Pallets Closed</p>
-          <p className="text-2xl font-bold">
-            {loading ? "…" : kpis?.palletsClosedInRange ?? 0}
-          </p>
+        <div className="rounded-xl border border-slate-800 bg-slate-50 dark:bg-slate-900 p-4">
+          <div className="text-xs opacity-70 mb-1">Pallets Closed</div>
+          <div className="text-2xl font-semibold">{kpis.palletsClosed}</div>
         </div>
       </div>
 
-      {/* Hourly Bar Chart */}
-      <div className="p-4 rounded-lg border bg-white dark:bg-slate-900">
-        <h3 className="text-sm font-medium mb-3">Production by Hour</h3>
-        {charts?.hourly && charts.hourly.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={charts.hourly}>
+      {/* BAR CHART */}
+      <div className="rounded-xl border border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 mb-6">
+        <div className="text-sm font-semibold mb-2">Production by Hour</div>
+        <div className="w-full h-60">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={hourData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="hour"
-                label={{
-                  value: "Hour of Day",
-                  position: "insideBottom",
-                  offset: -5,
-                }}
-              />
-              <YAxis
-                allowDecimals={false}
-                label={{ value: "Packets", angle: -90, position: "insideLeft" }}
-              />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: '#1e293b', // slate-800
-                  border: '1px solid #334155', // slate-700
-                  borderRadius: '8px',
-                  color: '#f1f5f9', // slate-100
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-                }}
-                labelStyle={{
-                  color: '#cbd5e1', // slate-300
-                  fontWeight: '600',
-                  marginBottom: '4px'
-                }}
-                formatter={(value: any, name: string) => [
-                  `${value} packets`, // Cambiamos "count" por "packets"
-                  name === 'count' ? 'Production' : name
-                ]}
-                labelFormatter={(label) => `Hour: ${label}:00`}
-              />
-              <Bar dataKey="count" fill="#3b82f6" />
+              <XAxis dataKey="name" label={{ value: "Hour (NZ)", position: "insideBottom", offset: -5 }} />
+              <YAxis allowDecimals={false} label={{ value: "Packets", angle: -90, position: "insideLeft" }} />
+              <Tooltip />
+              <Bar dataKey="Packets" />
             </BarChart>
           </ResponsiveContainer>
-        ) : (
-          <p className="text-slate-500 text-sm">No data available.</p>
-        )}
+        </div>
       </div>
+
+      {/* TABLA DETALLADA */}
       <StatsTable range={range} thermo={thermo} size={size} shift={shift} />
     </div>
   );

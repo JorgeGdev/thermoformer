@@ -1,0 +1,19 @@
+---
+// src/pages/stats.astro
+import Layout from "../layouts/DashboardLayout.astro";
+import StatsBoard from "../react/StatsBoard";
+import type { ThermoProp } from "../react/StatsBoard";
+
+const url = new URL(Astro.request.url);
+const raw = (url.searchParams.get("thermo") ?? "all").toLowerCase();
+
+// Convierte el query param al union que espera StatsBoard
+const thermo: ThermoProp =
+  raw === "1" ? 1 :
+  raw === "2" ? 2 :
+  "all";
+---
+
+<Layout title="Statistics">
+  <StatsBoard client:load thermoformer={thermo} />
+</Layout>

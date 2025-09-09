@@ -1,162 +1,127 @@
-// src/pages/api/save-roll.ts
 export const prerender = false;
 
 import { createClient } from "@supabase/supabase-js";
 
-// ENV (usa service role porque sube a storage e inserta en DB)
-const SUPABASE_URL = import.meta.env.SUPABASE_URL as string;
-const SUPABASE_SERVICE_ROLE = import.meta.env.SUPABASE_SERVICE_ROLE as string;
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
+// Lee variables (server-side)
+const url = import.meta.env.SUPABASE_URL as string;
+const serviceKey = import.meta.env.SUPABASE_SERVICE_ROLE as string;
+const BUCKET = "rolls";
 
-// Helpers
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
+// util: fecha NZ -> YYYY-MM-DD y HHmmss
+function nzDateParts(d = new Date()) {
+  const fmt = new Intl.DateTimeFormat("en-NZ", {
+    timeZone: "Pacific/Auckland",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(d).map(p => [p.type, p.value]));
+  // parts.month es "09", parts.day es "07", parts.year es "2025"
+  const YYYY = parts.year;
+  const MM = parts.month;
+  const DD = parts.day;
+  const hh = parts.hour;
+  const mm = parts.minute;
+  const ss = parts.second;
+  return {
+    dateFolder: `${YYYY}-${MM}-${DD}`,
+    timeCompact: `${hh}${mm}${ss}`,
+  };
+}
+
+// util: limpia base64 "data:image/jpeg;base64,...."
+function normalizeBase64(dataUrlOrBase64?: string) {
+  if (!dataUrlOrBase64) return null;
+  const i = dataUrlOrBase64.indexOf(",");
+  return i >= 0 ? dataUrlOrBase64.slice(i + 1) : dataUrlOrBase64;
+}
+
+function json(obj: unknown, status = 200) {
+  return new Response(JSON.stringify(obj), {
     status,
     headers: { "Content-Type": "application/json" },
   });
 }
 
-// "YYYY-MM-DD" en horario de Nueva Zelanda (Pacific/Auckland)
-function nzYmd(d = new Date()) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Pacific/Auckland",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(d);
-}
+type Body = {
+  thermoformer_number: 1 | 2 | number;
+  raw_materials: string;
+  batch_number: string;
+  box_number: string;
+  photoBase64?: string; // puede venir dataURL o solo base64
+};
 
-// limpia strings para usar en nombre de archivo
-function slug(v: string) {
-  return (v ?? "")
-    .toString()
-    .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^\w.-]/g, "");
-}
-
-// convierte dataURL o base64 “puro” a Buffer + contentType + extensión
-function base64ToFileParts(imageBase64: string) {
-  let b64 = imageBase64;
-  let contentType = "image/jpeg";
-  let ext = "jpg";
-
-  const m = /^data:(.+?);base64,(.*)$/.exec(imageBase64);
-  if (m) {
-    contentType = m[1];
-    b64 = m[2];
-  }
-  if (/png/i.test(contentType)) ext = "png";
-  else if (/jpeg|jpg/i.test(contentType)) ext = "jpg";
-  else if (/webp/i.test(contentType)) ext = "webp";
-
-  const buffer = Buffer.from(b64, "base64");
-  return { buffer, contentType, ext };
-}
-
-/**
- * Espera un JSON:
- * {
- *   thermoformer_number: 1 | 2,
- *   raw_materials: string,
- *   batch_number: string,
- *   box_number: string,
- *   imageBase64?: string,   // dataURL o base64
- *   user_id?: string        // opcional
- * }
- */
 export async function POST({ request }: { request: Request }) {
   try {
-    const body = await request.json();
-
-    const thermoformer_number = Number(body?.thermoformer_number);
-    const raw_materials = String(body?.raw_materials ?? "").trim();
-    const batch_number = String(body?.batch_number ?? "").trim();
-    const box_number = String(body?.box_number ?? "").trim();
-    const imageBase64 = body?.imageBase64 as string | undefined;
-    const user_id = body?.user_id as string | undefined;
-
-    if (![1, 2].includes(thermoformer_number)) {
-      return json({ ok: false, error: "Invalid thermoformer_number" }, 400);
+    if (!url || !serviceKey) {
+      return json({ error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE" }, 500);
     }
-    if (!raw_materials || !batch_number || !box_number) {
-      return json({ ok: false, error: "Missing fields" }, 400);
+    const supabase = createClient(url, serviceKey);
+
+    const body = (await request.json()) as Body;
+    const { thermoformer_number, raw_materials, batch_number, box_number } = body;
+    if (!thermoformer_number || !raw_materials || !batch_number || !box_number) {
+      return json({ error: "Missing required fields" }, 400);
     }
 
-    // 1) Preparar path NZ y nombre del archivo (si hay imagen)
-    const ymd = nzYmd(); // p.ej. "2025-09-08"
-    const folder = `${ymd}/thermo${thermoformer_number}`;
-
-    let photo_path: string | null = null;
-
-    if (imageBase64 && imageBase64.length > 16) {
-      const { buffer, contentType, ext } = base64ToFileParts(imageBase64);
-
-      // nombre legible + timestamp para evitar colisiones
-      const fileName = `${slug(raw_materials)}_${slug(batch_number)}_${slug(
-        box_number
-      )}_${Date.now()}.${ext}`;
-
-      // Importante: NO anteponer "rolls/" aquí. Es ruta relativa dentro del bucket.
-      const objectPath = `${folder}/${fileName}`;
-
-      // 2) Subir al bucket 'rolls'
-      const up = await supabase.storage
-        .from("rolls")
-        .upload(objectPath, buffer, {
-          contentType,
-          upsert: false,
-        });
-
-      if (up.error) {
-        console.error("[save-roll] upload error:", up.error.message);
-        return json({ ok: false, error: up.error.message }, 500);
-      }
-
-      photo_path = objectPath;
-    }
-
-    // 3) Insertar fila en tabla rolls
-    const insertPayload: Record<string, any> = {
-      thermoformer_number,
-      raw_materials,
-      batch_number,
-      box_number,
-      photo_path, // relativo: "YYYY-MM-DD/thermo1/xxxxx.jpg"
-    };
-    if (user_id) insertPayload.user_id = user_id;
-
-    const { data, error } = await supabase
+    // 1) Inserta el roll en la tabla (aunque la foto falle, tendrás el registro)
+    const { data: inserted, error: insErr } = await supabase
       .from("rolls")
-      .insert(insertPayload)
-      .select("id, created_at, photo_path")
+      .insert({
+        thermoformer_number: Number(thermoformer_number),
+        raw_materials,
+        batch_number,
+        box_number,
+      })
+      .select("*")
       .single();
 
-    if (error) {
-      console.error("[save-roll] insert error:", error.message);
-      return json({ ok: false, error: error.message }, 500);
+    if (insErr) return json({ error: insErr.message }, 500);
+
+    // 2) Si llegó foto, súbela al bucket
+    let photo_path: string | null = null;
+
+    if (body.photoBase64) {
+      const base64 = normalizeBase64(body.photoBase64);
+      if (!base64) {
+        return json({ error: "Invalid base64 image" }, 400);
+      }
+
+      const { dateFolder, timeCompact } = nzDateParts();
+      const thermoFolder = Number(thermoformer_number) === 2 ? "thermo2" : "thermo1";
+      const filename = `${raw_materials}_${batch_number}_${box_number}_${timeCompact}.jpg`;
+
+      // ⚠️ Path SIN anteponer "rolls/" (el bucket ya es 'rolls')
+      const path = `${dateFolder}/${thermoFolder}/${filename}`;
+
+      const buffer = Buffer.from(base64, "base64");
+      const { error: upErr } = await supabase.storage
+        .from(BUCKET)
+        .upload(path, buffer, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
+
+      if (upErr) {
+        // foto falló, pero el roll ya se insertó
+        return json({ ok: true, roll: inserted, warn: `Upload failed: ${upErr.message}` }, 200);
+      }
+
+      photo_path = path;
+
+      // 3) Guarda ruta de foto en la fila recién insertada
+      await supabase
+        .from("rolls")
+        .update({ photo_path })
+        .eq("id", inserted.id);
     }
 
-    // 4) Si deseas mostrar url directa en la UI:
-    let photo_url: string | null = null;
-    if (photo_path) {
-      const pub = supabase.storage.from("rolls").getPublicUrl(photo_path);
-      photo_url = pub.data?.publicUrl ?? null;
-
-      // Si el bucket no fuera público, podrías firmar:
-      // const signed = await supabase.storage.from("rolls").createSignedUrl(photo_path, 3600);
-      // photo_url = signed.data?.signedUrl ?? null;
-    }
-
-    return json({
-      ok: true,
-      roll_id: data.id,
-      created_at: data.created_at,
-      photo_path,
-      photo_url, // útil para previsualizar
-    });
-  } catch (err: any) {
-    console.error("[save-roll] ERROR:", err?.message);
-    return json({ ok: false, error: err?.message ?? "save-roll failed" }, 500);
+    return json({ ok: true, roll: { ...inserted, photo_path } }, 200);
+  } catch (e: any) {
+    return json({ error: e?.message ?? "save-roll error" }, 500);
   }
 }

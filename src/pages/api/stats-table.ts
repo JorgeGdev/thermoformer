@@ -3,81 +3,81 @@ export const prerender = false;
 
 import { createClient } from "@supabase/supabase-js";
 
-const url = import.meta.env.SUPABASE_URL!;
-const service = import.meta.env.SUPABASE_SERVICE_ROLE!;
-const supabase = createClient(url, service);
+const SUPABASE_URL = import.meta.env.SUPABASE_URL!;
+const SUPABASE_SERVICE_ROLE = import.meta.env.SUPABASE_SERVICE_ROLE!;
 
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
+function json(obj: unknown, status = 200) {
+  return new Response(JSON.stringify(obj), {
     status,
     headers: { "Content-Type": "application/json" },
   });
 }
 
-// helper para calcular rangos de fechas
-function getRangeBounds(range: string) {
+const NZ_TZ = "Pacific/Auckland";
+function nowInNZ() {
   const now = new Date();
-
-  // usamos UTC para evitar problemas, después ajustas a NZ si prefieres
-  let start: Date;
-  let end: Date;
-
-  if (range === "day") {
-    start = new Date(now);
-    start.setUTCHours(0, 0, 0, 0);
-    end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + 1);
-  } else if (range === "week") {
-    const day = now.getUTCDay(); // 0 = domingo
-    start = new Date(now);
-    start.setUTCDate(start.getUTCDate() - day);
-    start.setUTCHours(0, 0, 0, 0);
-    end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + 7);
-  } else if (range === "month") {
-    start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-    end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-  } else {
-    // sin filtro
-    start = new Date(0);
-    end = new Date();
-    end.setUTCDate(end.getUTCDate() + 1);
-  }
-
-  return { start: start.toISOString(), end: end.toISOString() };
+  return new Date(now.toLocaleString("en-NZ", { timeZone: NZ_TZ }));
 }
+function nzRangeToUTC(range: "today" | "week" | "month") {
+  const nzNow = nowInNZ();
+  const offsetMs = nzNow.getTime() - new Date().getTime();
+
+  const startNZ = new Date(nzNow);
+  if (range === "today") {
+    startNZ.setHours(0, 0, 0, 0);
+  } else if (range === "week") {
+    const day = startNZ.getDay();
+    const delta = (day + 6) % 7;
+    startNZ.setDate(startNZ.getDate() - delta);
+    startNZ.setHours(0, 0, 0, 0);
+  } else {
+    startNZ.setDate(1);
+    startNZ.setHours(0, 0, 0, 0);
+  }
+  const endNZ = new Date(startNZ);
+  if (range === "today") endNZ.setDate(endNZ.getDate() + 1);
+  else if (range === "week") endNZ.setDate(endNZ.getDate() + 7);
+  else endNZ.setMonth(endNZ.getMonth() + 1);
+
+  const fromUTC = new Date(startNZ.getTime() - offsetMs);
+  const toUTC = new Date(endNZ.getTime() - offsetMs);
+  return { fromUTC, toUTC };
+}
+
+type Body = {
+  range: "today" | "week" | "month";
+  thermo: "all" | "1" | "2";
+  size: "all" | 22 | 25 | 27 | 30;
+  shift: "all" | "DS" | "TW" | "NS";
+  page?: number; // no lo usamos, la paginación es local
+  limit?: number;
+};
 
 export async function POST({ request }: { request: Request }) {
   try {
-    const { page = 1, limit = 10, range, thermo, size, shift } =
-      await request.json();
+    const { range, thermo, size, shift } = (await request.json()) as Body;
 
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
+    const { fromUTC, toUTC } = nzRangeToUTC(range);
 
-    let query = supabase
-      .from("v_packets_full")
-      .select("*", { count: "exact" })
-      .order("created_at", { ascending: false })
-      .range(from, to);
+    let q = supabase
+      .from("v_packets_full") // vista enriquecida
+      .select("*")
+      .gte("created_at", fromUTC.toISOString())
+      .lt("created_at", toUTC.toISOString())
+      .order("created_at", { ascending: false });
 
-    // filtros
-    if (thermo && thermo !== "all") query = query.eq("thermoformer_number", thermo);
-    if (size && size !== "all") query = query.eq("size", size);
-    if (shift && shift !== "all") query = query.eq("shift", shift);
+    if (thermo !== "all") q = q.eq("thermoformer_number", Number(thermo));
+    if (size !== "all") q = q.eq("size", Number(size));
+    if (shift !== "all") q = q.eq("shift", shift);
 
-    // rango de fechas
-    if (range && range !== "all") {
-      const { start, end } = getRangeBounds(range);
-      query = query.gte("created_at", start).lt("created_at", end);
-    }
-
-    const { data, error, count } = await query;
+    // traemos “muchos” y la tabla pagina en el cliente
+    const { data, error } = await q.limit(2000);
     if (error) throw error;
 
-    return json({ ok: true, data, count });
+    return json({ ok: true, data, count: data?.length ?? 0 });
   } catch (err: any) {
-    console.error("[stats-table] error:", err.message);
-    return json({ ok: false, error: err.message }, 500);
+    console.error("[stats-table] error:", err?.message || err);
+    return json({ ok: false, error: err?.message || "stats-table error" }, 500);
   }
 }

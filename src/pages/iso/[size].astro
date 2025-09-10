@@ -1,8 +1,9 @@
 ---
 import Layout from "../../layouts/DashboardLayout.astro";
 import GetISOBySize from "../../react/GetISOBySize";
+import { ACTIVE_SIZES } from "../../config/sizes";
 
-const sizes = [22, 25, 27, 30] as const;                   // 👈 literales
+const sizes = ACTIVE_SIZES;
 const param = Astro.params.size ?? "";
 const num = Number(param);
 
@@ -26,7 +27,7 @@ const sizeLiteral = valid ? (num as (typeof sizes)[number]) : null;
     ) : (
       <>
         <h2 class="text-lg font-semibold mb-2">Invalid size</h2>
-        <p class="opacity-80">Valid sizes: 22, 25, 27, 30.</p>
+        <p class="opacity-80">Valid sizes: {ACTIVE_SIZES.join(", ")}.</p>
       </>
     )}
     <a href="/iso" class="inline-block mt-6 text-blue-600 hover:underline">

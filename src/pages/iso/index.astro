@@ -1,7 +1,8 @@
 ---
 import Layout from "../../layouts/DashboardLayout.astro";
+import { ACTIVE_SIZES } from "../../config/sizes";
 
-const sizeCards = [22, 25, 27, 30] as const;
+const sizeCards = ACTIVE_SIZES;
 
 const btnBig =
   "w-full h-[110px] rounded-xl text-white font-semibold text-lg " +

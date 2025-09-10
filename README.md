@@ -1,12 +1,13 @@
 # 🏭 Plixies Thermoformer Dashboard
 
-> **Sistema de gestión integral para producción de thermoformers con trazabilidad completa de materiales, generación automática de ISOs y análisis de producción en tiempo real.**
+> **Sistema de gestión integral para producción de thermoformers con trazabilidad completa, análisis en tiempo real, gestión de raw pallets y generación automática de ISOs.**
 
-[![Astro](https://img.shields.io/badge/Astro-5.x-orange?logo=astro)](https://astro.build/)
+[![Astro](https://img.shields.io/badge/Astro-5.13-orange?logo=astro)](https://astro.build/)
 [![React](https://img.shields.io/badge/React-19.x-blue?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-green?logo=supabase)](https://supabase.com/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.x-cyan?logo=tailwindcss)](https://tailwindcss.com/)
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel)](https://vercel.com/)
 
 ---
 
@@ -14,19 +15,356 @@
 
 - [🎯 **Características principales**](#-características-principales)
 - [🏗️ **Arquitectura del sistema**](#️-arquitectura-del-sistema)
-- [🗄️ **Base de datos y estructura**](#️-base-de-datos-y-estructura)
-- [⚡ **Tecnologías utilizadas**](#-tecnologías-utilizadas)
-- [🚀 **Instalación y configuración**](#-instalación-y-configuración)
-- [📱 **Funcionalidades detalladas**](#-funcionalidades-detalladas)
-- [🔧 **API endpoints**](#-api-endpoints)
-- [📊 **Análisis y estadísticas**](#-análisis-y-estadísticas)
-- [🎨 **Diseño y UX**](#-diseño-y-ux)
-- [🔄 **Flujo de producción**](#-flujo-de-producción)
-- [⚙️ **Configuración avanzada**](#️-configuración-avanzada)
+- [� **Estructura del proyecto**](#-estructura-del-proyecto)
+- [⚡ **Stack tecnológico**](#-stack-tecnológico)
+- [🚀 **Instalación y desarrollo**](#-instalación-y-desarrollo)
+- [🌐 **Deployment**](#-deployment)
+- [📱 **Funcionalidades**](#-funcionalidades)
+- [🔧 **API Reference**](#-api-reference)
+- [🎨 **UI/UX Features**](#-uiux-features)
+- [🗄️ **Base de datos**](#️-base-de-datos)
 
 ---
 
 ## 🎯 Características principales
+
+### 🏭 **Gestión de producción**
+- **Trazabilidad completa** de materiales y procesos
+- **Control dual** de thermoformers (1 y 2)
+- **Gestión de raw pallets** con OCR automático
+- **Generación de ISOs** por tamaño y especificaciones
+- **Análisis estadístico** en tiempo real
+
+### 📊 **Analytics avanzados**
+- **Dashboard interactivo** con gráficos Recharts
+- **Filtros dinámicos** por fecha, thermoformer, turno
+- **KPIs en tiempo real** con actualización automática
+- **Exportación de datos** y reportes
+
+### 🎨 **Experiencia de usuario**
+- **Dark/Light mode** con toggle animado
+- **Responsive design** optimizado para móvil y desktop
+- **Navegación intuitiva** con sidebar responsive
+- **Reloj en tiempo real** en todas las páginas
+- **Confirmaciones modales** para acciones críticas
+
+---
+
+## 🏗️ Arquitectura del sistema
+
+```mermaid
+graph TB
+    A[Frontend - Astro + React] --> B[API Routes - TypeScript]
+    B --> C[Supabase Database]
+    B --> D[OpenAI OCR Processing]
+    
+    E[Raw Pallets] --> F[OCR Scanning]
+    F --> G[Data Validation]
+    G --> H[Database Storage]
+    
+    I[Thermoformer Input] --> J[Roll Generation]
+    J --> K[ISO Assignment]
+    K --> L[Statistics Update]
+```
+
+### **Componentes principales**
+- **Frontend**: Astro SSR + React 19 para interactividad
+- **Backend**: Serverless functions en Astro
+- **Database**: Supabase PostgreSQL con RLS
+- **OCR**: OpenAI GPT-4 Vision para procesamiento automático
+- **UI**: TailwindCSS 4.x con componentes reutilizables
+
+---
+
+## 📁 Estructura del proyecto
+
+```
+plixies-dashboard/
+├── src/
+│   ├── layouts/
+│   │   └── DashboardLayout.astro      # Layout principal con sidebar y header
+│   ├── pages/
+│   │   ├── api/                       # Serverless API endpoints
+│   │   │   ├── get-iso.ts            # Obtener ISOs por tamaño
+│   │   │   ├── list-rolls.ts         # Listar rolls de Supabase Storage
+│   │   │   ├── ocr-intake.ts         # OCR para intake de thermoformer
+│   │   │   ├── ocr-raw-pallet.ts     # OCR para raw pallets
+│   │   │   ├── raw-pallets.ts        # CRUD de raw pallets
+│   │   │   ├── save-raw-pallet.ts    # Guardar raw pallet
+│   │   │   ├── save-roll.ts          # Guardar roll data
+│   │   │   ├── stats-table.ts        # Datos tabulares de stats
+│   │   │   └── stats.ts              # KPIs y estadísticas
+│   │   ├── intake/                    # Intake de thermoformers
+│   │   │   ├── thermoformer-1.astro
+│   │   │   └── thermoformer-2.astro
+│   │   ├── iso/                       # Sistema de ISOs
+│   │   │   ├── [size].astro          # ISO por tamaño dinámico
+│   │   │   └── index.astro           # Selector de tamaños
+│   │   ├── index.astro               # Dashboard principal
+│   │   ├── intake.astro              # Selector de thermoformer
+│   │   ├── raw-pallets.astro         # Gestión de raw pallets
+│   │   ├── rolls.astro               # Galería de roll images
+│   │   └── stats.astro               # Analytics y estadísticas
+│   ├── react/                         # Componentes React
+│   │   ├── Clock.tsx                 # Reloj en tiempo real
+│   │   ├── ConfirmModal.tsx          # Modal de confirmación
+│   │   ├── GetISOBySize.tsx          # Generador de ISOs
+│   │   ├── PalletScan.tsx            # Scanner de pallets
+│   │   ├── RawPalletsTable.tsx       # Tabla de raw pallets
+│   │   ├── RollsGallery.tsx          # Galería de imágenes
+│   │   ├── StatsBoard.tsx            # Dashboard de estadísticas
+│   │   ├── StatsTable.tsx            # Tabla de datos de stats
+│   │   └── ThermoFormBasic.tsx       # Formulario de thermoformer
+│   ├── styles/
+│   │   └── global.css                # Estilos globales de Tailwind
+│   └── lib/                          # Utilities y helpers
+├── public/                            # Assets estáticos
+├── astro.config.mjs                   # Configuración de Astro + Vercel
+├── tailwind.config.mjs                # Configuración de Tailwind
+└── package.json                       # Dependencias y scripts
+```
+
+---
+
+## ⚡ Stack tecnológico
+
+### **Frontend**
+- **Astro 5.13.5** - Framework SSR con hydratación selectiva
+- **React 19.1** - Componentes interactivos con Concurrent Features
+- **TypeScript 5.x** - Type safety y mejor DX
+- **TailwindCSS 4.1** - Utility-first CSS con dark mode
+
+### **Backend & Database**
+- **Supabase** - PostgreSQL con Row Level Security
+- **Serverless Functions** - API routes en Astro
+- **OpenAI GPT-4 Vision** - OCR automático de documentos
+
+### **UI & Analytics**
+- **Recharts 3.1** - Gráficos interactivos y responsive
+- **Lucide React** - Iconografía moderna
+- **Custom animations** - Transiciones fluidas CSS
+
+### **Development & Deployment**
+- **Vercel** - Deployment automático desde GitHub
+- **ESLint + TypeScript** - Code quality
+- **Hot reload** - Desarrollo ágil
+
+---
+
+## 🚀 Instalación y desarrollo
+
+### **Prerrequisitos**
+- Node.js >=18.20.8
+- npm >=9.6.5
+- Cuenta de Supabase
+- API Key de OpenAI (opcional para OCR)
+
+### **Setup local**
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/JorgeGdev/thermoformer.git
+cd plixies-dashboard
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus credenciales
+```
+
+### **Variables de entorno**
+```bash
+# .env
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+OPENAI_API_KEY=your_openai_key  # Para OCR
+```
+
+### **Desarrollo**
+```bash
+# Iniciar servidor de desarrollo
+npm run dev
+# Abrir http://localhost:4321
+
+# Build para producción
+npm run build
+
+# Preview del build
+npm run preview
+```
+
+---
+
+## 🌐 Deployment
+
+### **Vercel (Recomendado)**
+```bash
+# Deploy automático desde GitHub
+# 1. Conectar repo en Vercel
+# 2. Configurar variables de entorno
+# 3. Deploy automático en cada push
+```
+
+### **Configuración Vercel**
+- **Framework**: Astro (detectado automáticamente)
+- **Build Command**: `astro build`
+- **Output Directory**: `dist`
+- **Environment Variables**: SUPABASE_URL, SUPABASE_ANON_KEY
+
+---
+
+## 📱 Funcionalidades
+
+### **🏠 Dashboard Principal**
+- Overview del sistema con métricas clave
+- Navegación rápida a módulos principales
+- Reloj en tiempo real
+
+### **📝 Intake System**
+- Selección de thermoformer (1 o 2)
+- Formulario de intake con validación
+- OCR automático de documentos
+- Confirmación modal antes de guardar
+
+### **🗂️ Raw Pallets Management**
+- Tabla paginada con filtros
+- Scanner OCR para automatización
+- CRUD completo con confirmaciones
+- Export de datos
+
+### **🏷️ ISO Generator**
+- Generación por tamaño (22, 25, 27, 30)
+- Interface destacada para números ISO
+- Sistema de colores por estado
+- Modal con énfasis visual
+
+### **�️ Roll Images Gallery**
+- Visualización de imágenes de Supabase Storage
+- Grid responsive con lazy loading
+- Modal de imagen ampliada
+- Filtros por fecha y thermoformer
+
+### **📊 Statistics Dashboard**
+- Gráficos interactivos con Recharts
+- KPIs en tiempo real
+- Filtros por fecha, turno, thermoformer
+- Tabla de datos con paginación local
+- Tooltips personalizados
+
+### **🎨 UI Features**
+- **Dark/Light Mode**: Toggle animado con persistencia
+- **Responsive Design**: Mobile-first approach
+- **Hamburger Menu**: Sidebar colapsable en móvil
+- **Real-time Clock**: En header de todas las páginas
+- **Loading States**: Skeletons y spinners
+- **Error Handling**: Mensajes user-friendly
+
+---
+
+## 🔧 API Reference
+
+### **Stats Endpoints**
+```typescript
+GET /api/stats?range=today&thermo=1
+POST /api/stats-table { page, limit, filters }
+```
+
+### **Raw Pallets**
+```typescript
+GET /api/raw-pallets
+POST /api/save-raw-pallet { data }
+POST /api/ocr-raw-pallet { image_base64 }
+```
+
+### **ISO System**
+```typescript
+GET /api/get-iso?size=22
+```
+
+### **Rolls Management**
+```typescript
+GET /api/list-rolls
+POST /api/save-roll { roll_data }
+```
+
+### **OCR Processing**
+```typescript
+POST /api/ocr-intake { image, context }
+```
+
+---
+
+## 🎨 UI/UX Features
+
+### **Design System**
+- **Color Palette**: Sky/Blue para light, Slate para dark
+- **Typography**: System fonts con jerarquía clara
+- **Spacing**: Grid system consistente
+- **Animations**: Transiciones de 300ms con easing
+
+### **Responsive Breakpoints**
+```css
+sm: 640px   /* Tablets */
+md: 768px   /* Small laptops */
+lg: 1024px  /* Desktops */
+xl: 1280px  /* Large screens */
+```
+
+### **Dark Mode**
+- Activación con toggle animado
+- Persistencia en localStorage
+- Transiciones suaves entre modos
+- Contraste optimizado para legibilidad
+
+---
+
+## �️ Base de datos
+
+### **Tablas principales**
+- `rolls` - Datos de producción de rolls
+- `raw_pallets` - Gestión de materiales raw
+- `iso_assignments` - Asignaciones de ISOs
+- `production_stats` - Métricas de producción
+
+### **Storage**
+- `roll_images` - Imágenes de rolls
+- `pallet_scans` - Scans de pallets
+
+### **Views y Functions**
+- Vistas agregadas para estadísticas
+- Functions para cálculos complejos
+- Triggers para auditoria automática
+
+---
+
+## 🤝 Contribución
+
+1. Fork del proyecto
+2. Crear feature branch (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit cambios (`git commit -m 'Agregar nueva funcionalidad'`)
+4. Push al branch (`git push origin feature/nueva-funcionalidad`)
+5. Abrir Pull Request
+
+---
+
+## 📄 Licencia
+
+Este proyecto es privado y propietario de la organización.
+
+---
+
+## 👨‍💻 Desarrollo
+
+**Desarrollado por**: Jorge García  
+**Stack**: Astro + React + Supabase + Vercel  
+**Versión**: 0.0.1  
+**Última actualización**: Septiembre 2025
+
+---
+
+*Dashboard de producción moderno, escalable y user-friendly para gestión integral de thermoformers.* 🚀
 
 ### ✨ **Gestión de Producción**
 - **Intake de Rolls**: Escaneo OCR con IA para extracción automática de datos de etiquetas

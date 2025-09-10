@@ -1,7 +1,7 @@
 import React, { useState } from "react";
+import { type Size } from "../config/sizes";
 
 type Shift = "DS" | "TW" | "NS";
-type Size = 22 | 25 | 27 | 30;
 
 interface Props {
   size: Size;
@@ -47,6 +47,43 @@ export default function GetISOBySize({ size }: Props) {
     } finally {
       setLoading(false);
     }
+  }
+
+  function generateCSV() {
+    if (!result) return;
+    
+    // CSV headers and data
+    const headers = ["ISO_NUMBER", "SIZE", "PACKET", "PALLET", "ISO_DATE"];
+    const data = [
+      result.iso_number || "",
+      result.size || "",
+      result.packet_index || "",
+      result.pallet_number || "",
+      result.iso_date || ""
+    ];
+    
+    // Create CSV content
+    const csvContent = [
+      headers.join(","),
+      data.map(field => `"${field}"`).join(",")
+    ].join("\n");
+    
+    // Generate filename with current timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const filename = `ISO_${result.iso_number}_${timestamp}.csv`;
+    
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -193,6 +230,12 @@ export default function GetISOBySize({ size }: Props) {
                 </div>
 
                 <div className="mt-6 flex justify-end gap-3 text-white">
+                  <button
+                    onClick={() => generateCSV()}
+                    className="px-5 py-2.5 rounded-lg bg-green-600/80 hover:bg-green-600 text-lg font-semibold"
+                  >
+                    PRINT
+                  </button>
                   <button
                     onClick={() => setOpen(false)}
                     className="px-5 py-2.5 rounded-lg bg-white/50 hover:bg-white/20 text-lg"

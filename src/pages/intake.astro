@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/DashboardLayout.astro";
 import Clock from "../react/Clock";
+import RollsGallery from "../react/RollsGallery";
 ---
 <Layout title="Intake">
   <div class="max-w-4xl mx-auto space-y-6">
@@ -39,6 +40,11 @@ import Clock from "../react/Clock";
     THERMOFORMER 2
   </a>
 </div>
+
+<div class="max-w-6xl mx-[10px] space-y-6 rounded-lg my-[120px] p-10 border-[1.5px] border-white">
+    <h2 class="text-xl font-semibold">Roll Stickers Viewer</h2>
+    <RollsGallery client:load />
+  </div>
 
 
     <p class="text-sm opacity-75">Mobile ready: large touch targets, gradients, and focus ring for accessibility.</p>

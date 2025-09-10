@@ -1,4 +1,31 @@
 @import "tailwindcss";
-/* Puedes añadir estilos propios normales si quieres */
-:root { color-scheme: light dark; }
+
+/* Configuración manual para dark mode */
+:root { 
+  /* Usar solo light por defecto, el dark mode se controla con clases */ 
+  color-scheme: light;
+}
+
+/* Estilos base para asegurar que dark mode funcione */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* Forzar estilos básicos de dark mode si Tailwind no los aplica */
+html.dark body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+html.dark .bg-white {
+  background-color: #1e293b;
+}
+
+html.dark .text-slate-900 {
+  color: #e2e8f0;
+}
 

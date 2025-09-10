@@ -1,0 +1,10 @@
+---
+import DashboardLayout from "../layouts/DashboardLayout.astro";
+import NewPalletsTable from "../react/NewPalletsTable.tsx";
+---
+
+<DashboardLayout title="Get New Pallet">
+  <section class="mt-6">
+    <NewPalletsTable client:load />
+  </section>
+</DashboardLayout>

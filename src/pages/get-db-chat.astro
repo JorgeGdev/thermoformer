@@ -1,0 +1,10 @@
+---
+import DashboardLayout from "../layouts/DashboardLayout.astro";
+import DBChat from "../react/DBChat.tsx";
+---
+
+<DashboardLayout title="DB Chat (internal)">
+  <section class="mt-6">
+    <DBChat client:load />
+  </section>
+</DashboardLayout>

@@ -11,46 +11,17 @@ const { title = "Dashboard" } = Astro.props;
     <!-- Script para aplicar dark mode inmediatamente sin flash -->
     <script is:inline>
       (function() {
-        console.log('🌓 [DARK MODE] Inicializando...');
         const savedDarkMode = localStorage.getItem('darkMode');
-        console.log('🌓 [DARK MODE] localStorage darkMode:', savedDarkMode);
-        
         if (savedDarkMode === 'enabled') {
           document.documentElement.classList.add('dark');
-          console.log('🌓 [DARK MODE] Aplicando DARK mode desde localStorage');
-        } else {
-          document.documentElement.classList.remove('dark');
-          console.log('🌓 [DARK MODE] Aplicando LIGHT mode');
-          // Si no hay preferencia guardada, establecer light mode como default
-          if (savedDarkMode === null) {
-            localStorage.setItem('darkMode', 'disabled');
-            console.log('🌓 [DARK MODE] Usuario nuevo - estableciendo light mode por defecto');
-          }
+        } else if (savedDarkMode === null) {
+          // Usuario nuevo - establecer light mode por defecto
+          localStorage.setItem('darkMode', 'disabled');
         }
-        
-        console.log('🌓 [DARK MODE] Clases actuales en html:', document.documentElement.className);
       })();
     </script>
     
     <style>
-      /* Test manual de dark mode - Estos estilos deberían funcionar si la clase dark existe */
-      .dark body {
-        background-color: #0f172a !important;
-        color: #e2e8f0 !important;
-      }
-      
-      .dark .bg-white {
-        background-color: #1e293b !important;
-      }
-      
-      .dark .text-slate-900 {
-        color: #e2e8f0 !important;
-      }
-      
-      .dark .border-slate-200 {
-        border-color: #475569 !important;
-      }
-
       /* Dark Mode Toggle Styles */
       .dark-toggle {
         position: relative;
@@ -183,6 +154,7 @@ const { title = "Dashboard" } = Astro.props;
           <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white transition-colors" href="/intake">Intake</a>
           <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white transition-colors" href="/iso">Get ISO</a>
           <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white transition-colors" href="/get-new-pallet">Get New Pallet</a>
+          <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white transition-colors" href="/get-db-chat">Chat with THERMO</a>
           <a class="block rounded px-3 py-2 hover:bg-blue-500 hover:text-white transition-colors" href="/stats">Stats</a>
         </nav>
       </aside>
@@ -246,12 +218,6 @@ const { title = "Dashboard" } = Astro.props;
         const darkToggle = document.getElementById('dark-toggle');
         const modeText = document.getElementById('mode-text');
 
-        console.log('🔍 [ELEMENTS] Elementos encontrados:');
-        console.log('🔍 [ELEMENTS] darkToggle:', !!darkToggle);
-        console.log('🔍 [ELEMENTS] modeText:', !!modeText);
-        console.log('🔍 [ELEMENTS] hamburgerMenu:', !!hamburgerMenu);
-        console.log('🔍 [ELEMENTS] sidebar:', !!sidebar);
-
         // Open mobile menu
         function openMenu() {
           if (sidebar && overlay) {
@@ -275,22 +241,17 @@ const { title = "Dashboard" } = Astro.props;
         // Dark mode toggle functions
         function updateToggleState() {
           const isDark = document.documentElement.classList.contains('dark');
-          console.log('🔄 [TOGGLE] updateToggleState - isDark:', isDark);
           
           if (darkToggle && modeText) {
             if (isDark) {
               darkToggle.classList.add('dark');
               modeText.textContent = 'Dark';
               modeText.className = 'mode-text dark';
-              console.log('🔄 [TOGGLE] UI actualizada a DARK');
             } else {
               darkToggle.classList.remove('dark');
               modeText.textContent = 'Light';
               modeText.className = 'mode-text light';
-              console.log('🔄 [TOGGLE] UI actualizada a LIGHT');
             }
-          } else {
-            console.log('❌ [TOGGLE] No se encontraron elementos darkToggle o modeText');
           }
         }
 
@@ -299,74 +260,23 @@ const { title = "Dashboard" } = Astro.props;
         closeMenu?.addEventListener('click', closeMenuFn);
         overlay?.addEventListener('click', closeMenuFn);
 
-        console.log('👂 [EVENTS] Event listeners agregados');
-        console.log('👂 [EVENTS] darkToggle disponible para evento:', !!darkToggle);
-
         // Dark mode toggle with localStorage
         darkToggle?.addEventListener('click', function() {
-          console.log('🖱️ [CLICK] Toggle clickeado');
-          const wasDark = document.documentElement.classList.contains('dark');
-          console.log('🖱️ [CLICK] Estado antes del toggle:', wasDark ? 'DARK' : 'LIGHT');
-          
           const isDark = document.documentElement.classList.toggle('dark');
-          console.log('🖱️ [CLICK] Estado después del toggle:', isDark ? 'DARK' : 'LIGHT');
-          console.log('🖱️ [CLICK] Clases actuales en html:', document.documentElement.className);
-          
           localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-          console.log('🖱️ [CLICK] localStorage actualizado a:', localStorage.getItem('darkMode'));
-          
           updateToggleState();
         });
 
         // Load dark mode preference from localStorage
-        // IMPORTANTE: Solo usa localStorage, ignora preferencias del navegador
-        console.log('🔄 [INIT] Cargando preferencias...');
         const savedDarkMode = localStorage.getItem('darkMode');
-        console.log('🔄 [INIT] localStorage darkMode:', savedDarkMode);
-        
         if (savedDarkMode === 'enabled') {
           document.documentElement.classList.add('dark');
-          console.log('🔄 [INIT] Aplicando DARK mode desde localStorage');
-        } else {
-          // Asegurar que esté en light mode por defecto
-          document.documentElement.classList.remove('dark');
-          console.log('🔄 [INIT] Aplicando LIGHT mode');
-          // Si no hay preferencia guardada, establecer light mode como default
-          if (savedDarkMode === null) {
-            localStorage.setItem('darkMode', 'disabled');
-            console.log('🔄 [INIT] Estableciendo light mode por defecto');
-          }
+        } else if (savedDarkMode === null) {
+          localStorage.setItem('darkMode', 'disabled');
         }
         
         // Initialize toggle state
-        console.log('🔄 [INIT] Inicializando estado del toggle...');
         updateToggleState();
-        console.log('🔄 [INIT] Estado inicial completado');
-
-        // DEBUG: Función global para testing manual desde consola
-        window.debugDarkMode = function() {
-          console.log('🔧 [DEBUG] Estado actual:');
-          console.log('- HTML classes:', document.documentElement.className);
-          console.log('- localStorage:', localStorage.getItem('darkMode'));
-          console.log('- darkToggle element:', !!document.getElementById('dark-toggle'));
-          console.log('- modeText element:', !!document.getElementById('mode-text'));
-          console.log('- tiene clase dark:', document.documentElement.classList.contains('dark'));
-          
-          // Test manual de estilos
-          const testElement = document.body;
-          const computedStyle = window.getComputedStyle(testElement);
-          console.log('- Color de fondo actual de body:', computedStyle.backgroundColor);
-          console.log('- Color de texto actual de body:', computedStyle.color);
-          
-          // Test para forzar estilos manualmente
-          if (document.documentElement.classList.contains('dark')) {
-            console.log('🔧 [DEBUG] Modo DARK activo, pero estilos no se aplican. Problema con CSS.');
-          } else {
-            console.log('🔧 [DEBUG] Modo LIGHT activo');
-          }
-        };
-
-        console.log('🔧 [DEBUG] Función window.debugDarkMode() disponible para testing');
 
         // Close menu when clicking on navigation links (mobile)
         if (sidebar) {

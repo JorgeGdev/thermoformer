@@ -2,8 +2,12 @@
 import Layout from "../layouts/DashboardLayout.astro";
 import Clock from "../react/Clock";
 import RollsGallery from "../react/RollsGallery";
+import WarpBackground from "../react/WarpBackground.tsx";
 ---
 <Layout title="Intake">
+
+  <!-- Shader Background -->
+  <WarpBackground client:load style={{ background: 'linear-gradient(135deg, #65BB45, #4A9B35, #65BB45)' }} />
   <div class="max-w-4xl mx-auto space-y-6">
     <div class="flex items-center justify-between">
       <h2 class="text-lg font-semibold">Select thermoformer</h2>
@@ -17,9 +21,9 @@ import RollsGallery from "../react/RollsGallery";
     href="/intake/thermoformer-1"
     class="w-full sm:w-[260px] h-[120px] 
            rounded-xl text-white font-semibold text-lg
-           bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700
-           shadow-lg shadow-blue-900/20
-           hover:from-blue-400 hover:via-blue-600 hover:to-blue-800
+           bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800
+           shadow-lg shadow-slate-900/20
+           hover:from-slate-500 hover:via-slate-600 hover:to-slate-700
            active:scale-[0.98]
        transition flex items-center justify-center"
   >
@@ -31,9 +35,9 @@ import RollsGallery from "../react/RollsGallery";
     href="/intake/thermoformer-2"
     class="w-full sm:w-[260px] h-[120px]
            rounded-xl text-white font-semibold text-lg
-           bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700
-           shadow-lg shadow-blue-900/20
-           hover:from-blue-400 hover:via-blue-600 hover:to-blue-800
+           bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800
+           shadow-lg shadow-slate-900/20
+           hover:from-slate-500 hover:via-slate-600 hover:to-slate-700
            active:scale-[0.98]
            transition flex items-center justify-center"
   >

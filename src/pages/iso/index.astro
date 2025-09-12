@@ -1,17 +1,22 @@
 ---
 import Layout from "../../layouts/DashboardLayout.astro";
 import { ACTIVE_SIZES } from "../../config/sizes";
+import WarpBackground from "../../react/WarpBackground.tsx";
 
 const sizeCards = ACTIVE_SIZES;
 
 const btnBig =
   "w-full h-[110px] rounded-xl text-white font-semibold text-lg " +
-  "bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 " +
-  "shadow-lg shadow-blue-900/20 hover:from-blue-400 hover:via-blue-600 hover:to-blue-800 " +
+  "bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 " +
+  "shadow-lg shadow-slate-900/20 hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 " +
   "active:scale-[0.98] transition flex items-center justify-center";
 ---
 
 <Layout title="Get ISO • Pick size">
+  <!-- Shader Background -->
+  <WarpBackground client:load style={{ background: 'linear-gradient(135deg, #65BB45, #4A9B35, #65BB45)' }} />
+
+
   <div class="max-w-5xl mx-auto">
     <h1 class="text-xl font-semibold mb-6">Get ISO — choose size</h1>
 
@@ -23,6 +28,6 @@ const btnBig =
       ))}
     </div>
 
-    <a href="/" class="inline-block mt-6 text-blue-600 hover:underline">← Back</a>
+    <a href="/" class="inline-block mt-6 text-slate-600 hover:underline">← Back</a>
   </div>
 </Layout>

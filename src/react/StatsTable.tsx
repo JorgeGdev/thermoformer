@@ -111,7 +111,7 @@ export default function StatsTable({ range, thermo, size, shift }: Props) {
         <button
           disabled={localPage === 1}
           onClick={goPrev}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg disabled:opacity-50 disabled:hover:bg-slate-700 transition"
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg disabled:opacity-50 disabled:hover:bg-slate-700 transition border-2 border-white/30 hover:border-white/50"
         >
           Previous
         </button>
@@ -121,7 +121,7 @@ export default function StatsTable({ range, thermo, size, shift }: Props) {
         <button
           disabled={localPage >= totalPages}
           onClick={goNext}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg disabled:opacity-50 disabled:hover:bg-slate-700 transition"
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg disabled:opacity-50 disabled:hover:bg-slate-700 transition border-2 border-white/30 hover:border-white/50"
         >
           Next
         </button>

@@ -86,6 +86,14 @@ export default function GetISOBySize({ size }: Props) {
     URL.revokeObjectURL(url);
   }
 
+  function navigateToISO() {
+    setOpen(false);
+    if (typeof window !== "undefined") {
+      // navigate to the ISO index page
+      window.location.href = "/iso";
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Size lock + shift selector */}
@@ -155,7 +163,7 @@ export default function GetISOBySize({ size }: Props) {
                 <p className="mt-2 text-sm opacity-80">{errorMsg}</p>
                 <div className="mt-6 flex justify-end gap-3">
                   <button
-                    onClick={() => setOpen(false)}
+                    onClick={navigateToISO}
                     className="px-5 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-lg"
                   >
                     Close
@@ -236,7 +244,7 @@ export default function GetISOBySize({ size }: Props) {
                     PRINT
                   </button>
                   <button
-                    onClick={() => setOpen(false)}
+                    onClick={navigateToISO}
                     className="px-5 py-2.5 rounded-lg bg-white/50 hover:bg-white/20 text-base"
                   >
                     Close

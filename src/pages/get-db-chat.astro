@@ -1,9 +1,11 @@
 ---
 import DashboardLayout from "../layouts/DashboardLayout.astro";
 import DBChat from "../react/DBChat.tsx";
+import WarpBackground from "../react/WarpBackground.tsx";
 ---
 
 <DashboardLayout title="DB Chat (internal)">
+  <WarpBackground client:load style={{ background: 'linear-gradient(135deg, #65BB45, #4A9B35, #65BB45)' }} />
   <section class="mt-6">
     <DBChat client:load />
   </section>

@@ -165,9 +165,9 @@ export default function RawPalletsTable() {
   return (
     <div className="mt-6">
       {/* Tabla */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg overflow-hidden border border-slate-200 dark:border-slate-800">
-        <table className="w-full text-sm text-slate-900 dark:text-slate-200">
-          <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 uppercase text-xs">
+      <div className="bg-slate-900 rounded-xl shadow-lg overflow-hidden border border-slate-800">
+        <table className="w-full text-sm text-slate-200">
+          <thead className="bg-slate-800 text-slate-300 uppercase text-xs">
             <tr>
               <th className="px-3 py-3 text-center">Pallet</th>
               <th className="px-3 py-3 text-center">Batch</th>
@@ -181,7 +181,7 @@ export default function RawPalletsTable() {
 
           {/* Fila de alta (Add new) */}
           <tbody>
-            <tr className="bg-slate-50 dark:bg-slate-950/60">
+            <tr className="bg-slate-950/40">
               <td className="px-3 py-2 text-center">
                 <input
                   className="w-20 bg-transparent border-0 outline-none text-center"
@@ -236,7 +236,7 @@ export default function RawPalletsTable() {
               <td className="px-3 py-2 text-center">
                 <button
                   onClick={addNew}
-                  className="px-3 py-1.5 rounded bg-[#193DBC] hover:bg-[#4899FF] text-white"
+                  className="px-3 py-1.5 rounded bg-slate-600 hover:bg-slate-700 text-white border-2 border-white/30 hover:border-white/50 transition-all"
                 >
                   Add
                 </button>
@@ -261,8 +261,8 @@ export default function RawPalletsTable() {
                 <tr
                   key={r.id}
                   className={cx(
-                    i % 2 === 0 ? "bg-white dark:bg-slate-950/40" : "bg-slate-50 dark:bg-slate-900",
-                    "hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                    i % 2 === 0 ? "bg-slate-950/40" : "bg-slate-900",
+                    "hover:bg-slate-800/70"
                   )}
                 >
                   <td className="px-3 py-2 text-center font-semibold">

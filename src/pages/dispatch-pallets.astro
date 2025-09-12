@@ -1,14 +1,13 @@
 ---
 import DashboardLayout from "../layouts/DashboardLayout.astro";
-import NewPalletsTable from "../react/NewPalletsTable.tsx";
+import ShipmentsTable from "../react/ShipmentsTable.tsx";
 import WarpBackground from "../react/WarpBackground.tsx";
 ---
 
-<DashboardLayout title="Get New Pallet">
+<DashboardLayout title="Dispatch Pallets">
   <!-- Shader Background -->
   <WarpBackground client:load style={{ background: 'linear-gradient(135deg, #65BB45, #4A9B35, #65BB45)' }} />
-  
-  <section class="mt-6 relative z-10">
-    <NewPalletsTable client:load />
+  <section class="mt-6">
+    <ShipmentsTable client:load />
   </section>
 </DashboardLayout>

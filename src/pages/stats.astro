@@ -3,6 +3,7 @@
 import Layout from "../layouts/DashboardLayout.astro";
 import StatsBoard from "../react/StatsBoard";
 import type { ThermoProp } from "../react/StatsBoard";
+import WarpBackground from "../react/WarpBackground.tsx";
 
 const url = new URL(Astro.request.url);
 const raw = (url.searchParams.get("thermo") ?? "all").toLowerCase();
@@ -15,5 +16,7 @@ const thermo: ThermoProp =
 ---
 
 <Layout title="Statistics">
-  <StatsBoard client:load thermoformer={thermo} />
+  <!-- Shader Background -->
+  <WarpBackground client:load style={{ background: 'linear-gradient(135deg, #65BB45, #4A9B35, #65BB45)' }} />
+    <StatsBoard client:load thermoformer={thermo} />
 </Layout>

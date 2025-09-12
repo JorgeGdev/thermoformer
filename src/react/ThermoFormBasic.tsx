@@ -169,9 +169,9 @@ export default function ThermoFormBasic({ thermoformerNumber = 1 }: Props) {
           onClick={openScanner}
           className="w-full sm:w-[260px] h-[120px]
                      rounded-xl text-white font-semibold text-lg
-                     bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700
-                     shadow-lg shadow-blue-900/20
-                     hover:from-blue-400 hover:via-blue-600 hover:to-blue-800
+                     bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800
+                     shadow-lg shadow-slate-900/20
+                     hover:from-slate-500 hover:via-slate-600 hover:to-slate-700
                      active:scale-[0.98]
                      transition grid place-items-center"
         >
@@ -192,7 +192,7 @@ export default function ThermoFormBasic({ thermoformerNumber = 1 }: Props) {
         <label className="text-sm">
           Production # (Raw materials)
           <input
-            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900 px-3 py-2"
+            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-700 bg-white/10 dark:bg-slate-900 px-3 py-2"
             placeholder="e.g. 25020430"
             value={data.rawMaterials}
             onChange={(e) => onChange("rawMaterials", e.target.value)}
@@ -202,7 +202,7 @@ export default function ThermoFormBasic({ thermoformerNumber = 1 }: Props) {
         <label className="text-sm">
           Caspak Batch #
           <input
-            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900 px-3 py-2"
+            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-700 bg-white/10 dark:bg-slate-900 px-3 py-2"
             placeholder="e.g. 33693"
             value={data.batchNumber}
             onChange={(e) => onChange("batchNumber", e.target.value)}
@@ -212,7 +212,7 @@ export default function ThermoFormBasic({ thermoformerNumber = 1 }: Props) {
         <label className="text-sm">
           CTN# (Box number)
           <input
-            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900 px-3 py-2"
+            className="mt-1 w-full rounded border border-slate-300 dark:border-slate-700 bg-white/10 dark:bg-slate-900 px-3 py-2"
             placeholder="e.g. 931"
             value={data.boxNumber}
             onChange={(e) => onChange("boxNumber", e.target.value)}
@@ -235,7 +235,7 @@ export default function ThermoFormBasic({ thermoformerNumber = 1 }: Props) {
           type="button"
           onClick={openConfirm}
           disabled={saving}
-          className="rounded px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded px-4 py-2 bg-slate-600 text-white hover:bg-slate-700 disabled:opacity-50"
         >
           Confirm & Save
         </button>

@@ -162,7 +162,7 @@ export default function DBChat() {
     <div className="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl shadow">
       {/* Selector de idioma */}
       <div className="p-4 border-b border-slate-800 flex justify-between items-center">
-        <h2 className="text-slate-100 font-medium">🤖 Production AI Assistant</h2>
+        <h2 className="text-slate-100 font-medium">🤖 THERMO AI Assistant</h2>
         <div className="flex items-center space-x-2">
           <select 
             value={selectedLanguage}

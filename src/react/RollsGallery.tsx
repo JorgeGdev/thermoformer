@@ -57,7 +57,7 @@ export default function RollsGallery() {
               key={r}
               onClick={() => setRange(r)}
               className={`px-4 py-2 rounded-lg font-medium transition
-                ${active ? "bg-blue-600 text-white shadow-sm" : "bg-slate-800 text-slate-300 hover:bg-slate-700"}
+                ${active ? "bg-slate-600 text-white shadow-sm border-2 border-white/30" : "bg-slate-800 text-slate-300 hover:bg-slate-700 border-2 border-white/20"}
               `}
             >
               {r === "day" ? "Today" : r === "week" ? "This Week" : "This Month"}
@@ -117,7 +117,7 @@ export default function RollsGallery() {
                   +
                 </button>
                 <button
-                  className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  className="px-3 py-1 rounded bg-slate-600 text-white hover:bg-slate-700 border-2 border-white/30 hover:border-white/50 transition-all"
                   onClick={() => setSelected(null)}
                 >
                   Close
@@ -164,7 +164,7 @@ function Thumb({
 
   return (
     <figure
-      className="bg-slate-900/60 rounded-lg border border-slate-800 overflow-hidden hover:ring-2 hover:ring-blue-500/40 transition cursor-zoom-in"
+      className="bg-slate-900/60 rounded-lg border border-slate-800 overflow-hidden hover:ring-2 hover:ring-slate-500/40 transition cursor-zoom-in"
       onClick={() => onOpen(file)}
       title={file.photo_path}
     >
@@ -176,7 +176,7 @@ function Thumb({
         onError={() => setHide(true)}
       />
       <figcaption className="p-2 text-[11px] text-slate-300 flex items-center justify-between">
-        <span className="px-1.5 py-0.5 rounded bg-blue-600/20 text-blue-200 border border-blue-500/30">
+        <span className="px-1.5 py-0.5 rounded bg-slate-600/20 text-slate-200 border border-slate-500/30">
           TH{file.thermoformer_number}
         </span>
         <span className="truncate ml-2">{localTime}</span>

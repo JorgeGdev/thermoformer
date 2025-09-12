@@ -1,8 +1,11 @@
 ---
 import Layout from "../../layouts/DashboardLayout.astro";
 import ThermoFormBasic from "../../react/ThermoFormBasic";
+import WarpBackground from "../../react/WarpBackground.tsx";
 ---
 <Layout title="Intake • Thermoformer 1">
+  <!-- Shader Background -->
+  <WarpBackground client:load style={{ background: 'linear-gradient(135deg, #65BB45, #4A9B35, #65BB45)' }} />
   <div class="max-w-3xl mx-auto space-y-5">
     <h2 class="text-lg font-semibold">Thermoformer 1 — roll intake</h2>
     <ThermoFormBasic client:load />

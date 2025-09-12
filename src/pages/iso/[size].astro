@@ -2,6 +2,7 @@
 import Layout from "../../layouts/DashboardLayout.astro";
 import GetISOBySize from "../../react/GetISOBySize";
 import { ACTIVE_SIZES } from "../../config/sizes";
+import WarpBackground from "../../react/WarpBackground.tsx";
 
 const sizes = ACTIVE_SIZES;
 const param = Astro.params.size ?? "";
@@ -15,6 +16,8 @@ const sizeLiteral = valid ? (num as (typeof sizes)[number]) : null;
 ---
 
 <Layout title={`Get ISO • Size ${valid ? num : ""}`}>
+  <!-- Shader Background -->
+  <WarpBackground client:load style={{ background: 'linear-gradient(135deg, #65BB45, #4A9B35, #65BB45)' }} />
   <div class="max-w-5xl mx-auto">
     {valid ? (
       <>
@@ -30,7 +33,7 @@ const sizeLiteral = valid ? (num as (typeof sizes)[number]) : null;
         <p class="opacity-80">Valid sizes: {ACTIVE_SIZES.join(", ")}.</p>
       </>
     )}
-    <a href="/iso" class="inline-block mt-6 text-blue-600 hover:underline">
+    <a href="/iso" class="inline-block mt-6 text-slate-600 hover:underline">
       ← Back to sizes
     </a>
   </div>

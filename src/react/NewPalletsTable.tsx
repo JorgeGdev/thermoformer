@@ -186,11 +186,11 @@ export default function NewPalletsTable() {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg overflow-hidden border border-slate-200 dark:border-slate-800">
-        <table className="w-full text-sm text-slate-900 dark:text-slate-200">
-          <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 uppercase text-xs">
+      <div className="bg-slate-900 rounded-xl shadow-lg overflow-hidden border border-slate-800">
+        <table className="w-full text-sm text-slate-200">
+          <thead className="bg-slate-800 text-slate-300 uppercase text-xs">
             <tr>
-              <th className="px-3 py-3 text-center">#</th>
+              <th className="px-3 py-3 text-center">Pallet Number</th>
               <th className="px-3 py-3 text-center">Thermoformer</th>
               <th className="px-3 py-3 text-center">Size</th>
               <th className="px-3 py-3 text-center">ISO start</th>
@@ -205,20 +205,20 @@ export default function NewPalletsTable() {
           <tbody>
             {loading && rows.length === 0 ? (
               <tr>
-                <td colSpan={9} className="py-8 text-center text-slate-400 dark:text-slate-400">Loading…</td>
+                <td colSpan={9} className="py-8 text-center text-slate-400">Loading…</td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={9} className="py-8 text-center text-slate-400 dark:text-slate-400 italic">No pallets</td>
+                <td colSpan={9} className="py-8 text-center text-slate-400 italic">No pallets</td>
               </tr>
             ) : (
               rows.map((r, i) => (
                 <tr key={r.id} className={cx(
-                  i % 2 === 0 ? "bg-white dark:bg-slate-950/40" : "bg-slate-50 dark:bg-slate-900",
-                  "hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                  i % 2 === 0 ? "bg-slate-950/40" : "bg-slate-900",
+                  "hover:bg-slate-800/70"
                 )}>
                   <td className="px-3 py-2 text-center font-semibold">
-                    {typeof r.number === "number" ? `#${r.number}` : shortId(r.id)}
+                    {typeof r.number === "number" ? `${r.number}` : shortId(r.id)}
                   </td>
 
                   <td className="px-3 py-2 text-center">
@@ -255,8 +255,8 @@ export default function NewPalletsTable() {
                       className={
                         "px-2 py-1 rounded text-xs " +
                         (r.completed
-                          ? "bg-emerald-600/20 text-emerald-700 dark:text-emerald-300 border border-emerald-700/40"
-                          : "bg-slate-200 dark:bg-slate-700/30 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600/30")
+                          ? "bg-emerald-600/20 text-emerald-300 border border-emerald-700/40"
+                          : "bg-slate-700/30 text-slate-300 border border-slate-600/30")
                       }
                     >
                       {r.completed ? "Yes" : "No"}
@@ -267,7 +267,7 @@ export default function NewPalletsTable() {
 
                   <td className="px-3 py-2 text-center text-xs">
                     {r.closed_at ? (
-                      <span className="text-slate-600 dark:text-slate-400">
+                      <span className="text-slate-400">
                         {new Date(r.closed_at).toLocaleString("en-NZ", {
                           timeZone: "Pacific/Auckland",
                           month: "2-digit",
@@ -285,14 +285,14 @@ export default function NewPalletsTable() {
                     <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => downloadCSV(r)}
-                        className="px-2 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                        className="px-2 py-1 rounded bg-slate-600 hover:bg-slate-700 text-white text-xs"
                         title="Download CSV"
                       >
                         Print
                       </button>
                       <button
                         onClick={() => del(r.id)}
-                        className="px-2 py-1 rounded bg-rose-600 hover:bg-rose-700 text-white text-xs"
+                        className="px-2 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-xs"
                         title="Delete pallet"
                       >
                         Delete
@@ -311,15 +311,15 @@ export default function NewPalletsTable() {
         <button
           disabled={page === 1}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          className="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg disabled:opacity-50"
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg disabled:opacity-50 disabled:hover:bg-slate-700 transition"
         >
           Previous
         </button>
-        <span className="text-sm text-slate-600 dark:text-slate-400">Page {page} of {totalPages}</span>
+        <span className="text-sm text-slate-400">Page {page} of {totalPages}</span>
         <button
           disabled={page >= totalPages}
           onClick={() => setPage((p) => p + 1)}
-          className="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg disabled:opacity-50"
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg disabled:opacity-50 disabled:hover:bg-slate-700 transition"
         >
           Next
         </button>

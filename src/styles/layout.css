@@ -2,7 +2,37 @@
    1) Styles moved from <style>
    =========================== */
 
-/* Dark Mode Toggle Styles */
+/* === Mobile width + overlay + grid fallbacks === */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.main-content { width: 100%; min-width: 0; }
+.content-container { width: 100%; max-width: none; margin: 0; }
+
+/* Sidebar siempre anclado */
+#sidebar { position: fixed; top: 0; left: 0; }
+
+/* Overlay móvil oculto por defecto, ocupa toda la pantalla cuando se muestre */
+#mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); }
+#mobile-overlay.hidden { display: none; }
+
+/* Utilidades grid básicas (algunas clases Tailwind no estaban definidas) */
+.grid { display: grid; }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Media query estándar para móviles (evita 'width < 600px') */
+@media (max-width: 600px) {
+  .main-content { width: 100%; }
+}
+
+
+
+
+   /* Dark Mode Toggle Styles */
 .dark-toggle {
   position: relative;
   display: inline-flex;
@@ -240,11 +270,6 @@ header.bg-slate-800 {
 
 
 
-
-@media (width < 600px) {
-  .main-content{
-    width: 100%;
-  }}
 
 
 

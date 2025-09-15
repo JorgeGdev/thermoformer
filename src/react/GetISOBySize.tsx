@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { type Size } from "../config/sizes";
-import { saveToBarTenderInputDirect } from "./utils/fileUtils";
 
 
 type Shift = "DS" | "TW" | "NS";
@@ -51,7 +50,7 @@ export default function GetISOBySize({ size }: Props) {
     }
   }
 
-  async function generateCSV() {
+  function generateCSV() {
     if (!result) return;
     
     // CSV headers and data
@@ -74,9 +73,18 @@ export default function GetISOBySize({ size }: Props) {
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     const filename = `ISO_${result.iso_number}_${timestamp}.csv`;
     
-    // Create and save to C:\BarTender\input
+    // Create and trigger download
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    await saveToBarTenderInputDirect(blob, filename);
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   function navigateToISO() {

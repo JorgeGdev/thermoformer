@@ -24,13 +24,13 @@ const { title = "Dashboard" } = Astro.props;
     </script>
   </head>
   <body class="h-screen">
-    <div class="main-content flex h-full">
+    <div class="main-content flex h-full w-full">
       <!-- Mobile Menu Overlay -->
-      <div id="mobile-overlay" >
+      <div id="mobile-overlay" class="hidden">
       </div>
 
       <!-- Sidebar - Auto-hide on desktop, slide in when open on mobile -->
-      <aside id="sidebar" class="sidebar-auto-hide fixed lg:relative z-50 w-56 h-full transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out border-r">
+      <aside id="sidebar" class="sidebar-auto-hide fixed top-0 left-0 z-50 w-56 h-full transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out border-r">
         <!-- Mobile header with close button -->
         <div class="flex items-center justify-between p-4 lg:hidden">
           <div >Plixies</div>
@@ -57,7 +57,7 @@ const { title = "Dashboard" } = Astro.props;
       </aside>
 
       <!-- Main content -->
-      <div class="flex-1 flex flex-col min-w-0">
+      <div class="flex-1 flex flex-col min-w-0 w-full">
         <!-- Header with hamburger menu -->
         <header class="flex items-center justify-between px-4 h-14">
           <div class="flex items-center gap-3">
@@ -99,8 +99,8 @@ const { title = "Dashboard" } = Astro.props;
         </header>
 
         <!-- Main content area -->
-        <main class="main-content p-4 overflow-auto flex-1">
-          <div class="max-w-6xl mx-auto">
+        <main class="main-content p-4 overflow-auto flex-1 w-full">
+          <div class="content-container">
             <slot />
           </div>
         </main>

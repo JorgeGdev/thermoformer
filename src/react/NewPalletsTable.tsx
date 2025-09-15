@@ -1,5 +1,6 @@
 // src/react/NewPalletsTable.tsx
 import React, { useEffect, useState } from "react";
+import { saveToBarTenderInputDirect } from "./utils/fileUtils";
 
 type Row = {
   id: string;                // pallet id (UUID)
@@ -162,16 +163,11 @@ export default function NewPalletsTable() {
     // Convertir a CSV
     const csvContent = csvData.map(row => row.map(field => `"${field}"`).join(",")).join("\n");
     
-    // Crear archivo y descargar
+    // Crear archivo y guardarlo en C:\BarTender\input
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `pallet_${row.number || shortId(row.id)}_${Date.now()}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const filename = `pallet_${row.number || shortId(row.id)}_${Date.now()}.csv`;
+    
+    await saveToBarTenderInputDirect(blob, filename);
   }
 
   return (

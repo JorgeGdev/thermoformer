@@ -241,6 +241,14 @@ header.bg-slate-800 {
 
 
 
+@media (width < 600px) {
+  .main-content{
+    width: 100%;
+  }}
+
+
+
+
 
 
 

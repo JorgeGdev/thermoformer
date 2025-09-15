@@ -1,5 +1,11 @@
 import React, { useState } from "react";
 import { type Size } from "../config/sizes";
+import {
+  connectBarTenderFolder,
+  getSavedBarTenderFolder,
+  ensureWritePermission,
+  saveCsvToBarTender
+} from "./utils/barTenderUtils";
 
 
 type Shift = "DS" | "TW" | "NS";
@@ -23,6 +29,17 @@ export default function GetISOBySize({ size }: Props) {
   const [open, setOpen] = useState(false);
   const [errorMsg, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any | null>(null);
+
+  // BarTender folder connection state
+  const [dir, setDir] = useState<FileSystemDirectoryHandle | null>(null);
+
+  // Try to restore the BarTender folder on mount
+  React.useEffect(() => {
+    (async () => {
+      const saved = await getSavedBarTenderFolder();
+      if (saved && await ensureWritePermission(saved)) setDir(saved);
+    })();
+  }, []);
 
   async function createISO(thermoformer: 1 | 2) {
     if (loading) return;
@@ -50,10 +67,26 @@ export default function GetISOBySize({ size }: Props) {
     }
   }
 
-  function generateCSV() {
-    if (!result) return;
+  // BarTender folder connection functions
+  async function handleConnectFolder() {
+    try {
+      const picked = await connectBarTenderFolder();
+      if (picked && await ensureWritePermission(picked)) {
+        setDir(picked);
+        alert('BarTender folder connected! Future prints will save directly to C:\\BarTender\\input');
+      } else {
+        alert('Could not get permission for that folder.');
+      }
+    } catch (error) {
+      console.error('Error connecting folder:', error);
+      alert('Error connecting to BarTender folder.');
+    }
+  }
+
+  // Build CSV content for ISO
+  function buildIsoCsv(): string {
+    if (!result) return '';
     
-    // CSV headers and data
     const headers = ["ISO_NUMBER", "SIZE", "PACKET", "PALLET", "ISO_DATE"];
     const data = [
       result.iso_number || "",
@@ -63,28 +96,48 @@ export default function GetISOBySize({ size }: Props) {
       result.iso_date || ""
     ];
     
-    // Create CSV content
-    const csvContent = [
+    return [
       headers.join(","),
       data.map(field => `"${field}"`).join(",")
     ].join("\n");
+  }
+
+  async function generateCSV() {
+    if (!result) return;
     
-    // Generate filename with current timestamp
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-    const filename = `ISO_${result.iso_number}_${timestamp}.csv`;
-    
-    // Create and trigger download
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute("href", url);
-    link.setAttribute("download", filename);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const csv = buildIsoCsv();
+    const fileName = `ISO_${result.iso_number}_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
+
+    try {
+      if (dir && await ensureWritePermission(dir)) {
+        await saveCsvToBarTender(dir, fileName, csv);
+        alert('Saved to BarTender\\input folder!');
+        return;
+      }
+      // Fallback: descarga normal
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.style.visibility = 'hidden';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      alert('Saved to Downloads because BarTender folder is not connected.');
+    } catch (e: any) {
+      console.error('Error saving file:', e);
+      alert('Error saving file. Downloaded to default folder instead.');
+      // Emergency fallback
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   }
 
   function navigateToISO() {
@@ -121,6 +174,24 @@ export default function GetISOBySize({ size }: Props) {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* BarTender Connection Status */}
+      <div className="flex items-center justify-center gap-3">
+        {!dir && (
+          <button
+            onClick={handleConnectFolder}
+            className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm flex items-center gap-2"
+            title="Connect to C:\BarTender\input folder for direct saving"
+          >
+            📁 Connect BarTender Folder
+          </button>
+        )}
+        {dir && (
+          <div className="px-4 py-2 text-sm text-green-400 flex items-center gap-2 bg-green-900/20 rounded-lg border border-green-500/30">
+            ✅ BarTender Connected - Files will save to C:\BarTender\input
+          </div>
+        )}
       </div>
 
       {/* Thermoformer buttons */}

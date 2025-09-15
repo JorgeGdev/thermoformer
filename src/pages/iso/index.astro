@@ -2,6 +2,7 @@
 import Layout from "../../layouts/DashboardLayout.astro";
 import { ACTIVE_SIZES } from "../../config/sizes";
 import WarpBackground from "../../react/WarpBackground.tsx";
+import ISOStats from "../../react/ISOStats.tsx";
 
 const sizeCards = ACTIVE_SIZES;
 
@@ -16,17 +17,21 @@ const btnBig =
   <!-- Shader Background -->
   <WarpBackground client:load style={{ background: 'linear-gradient(135deg, #65BB45, #4A9B35, #65BB45)' }} />
 
-
-  <div class="max-w-5xl mx-auto">
-    <h1 class="text-xl font-semibold mb-6">Get ISO — choose size</h1>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+  <div class="max-w-5xl mx-auto p-4">
+    <h1 class="text-xl font-semibold mb-6 text-white">Get ISO — choose size</h1>
+     
+    <!-- Size Selection Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 my-20 mx-2.5 py-12.5 px-2.5 border border-solid border-white rounded-lg flex justify-between items-center">
       {sizeCards.map((s) => (
         <a href={`/iso/${s}`} class={btnBig}>
           SIZE {s}
         </a>
       ))}
     </div>
+
+     <!-- ISO Stats Component -->
+
+     <ISOStats client:load />
 
     <a href="/" class="inline-block text-xl mt-6 text-slate-50 hover:underline">← Back</a>
   </div>

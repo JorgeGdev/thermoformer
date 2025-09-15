@@ -1,5 +1,11 @@
 // src/react/NewPalletsTable.tsx
 import React, { useEffect, useState } from "react";
+import {
+  connectBarTenderFolder,
+  getSavedBarTenderFolder,
+  ensureWritePermission,
+  saveCsvToBarTender
+} from "./utils/barTenderUtils";
 
 type Row = {
   id: string;                // pallet id (UUID)
@@ -28,6 +34,9 @@ export default function NewPalletsTable() {
 
   const [draft, setDraft] = useState<Record<string, Partial<Row>>>({});
 
+  // BarTender folder connection state
+  const [dir, setDir] = useState<FileSystemDirectoryHandle | null>(null);
+
   const totalPages = Math.max(1, Math.ceil(count / limit));
 
   async function load() {
@@ -50,6 +59,14 @@ export default function NewPalletsTable() {
   }
 
   useEffect(() => { load(); }, [page]);
+
+  // Try to restore the BarTender folder on mount
+  useEffect(() => {
+    (async () => {
+      const saved = await getSavedBarTenderFolder();
+      if (saved && await ensureWritePermission(saved)) setDir(saved);
+    })();
+  }, []);
 
   function startEdit(id: string, key: keyof Row, val: any) {
     setDraft((d) => ({ ...d, [id]: { ...d[id], [key]: val } }));
@@ -130,21 +147,37 @@ export default function NewPalletsTable() {
     }
   }
 
-  async function downloadCSV(row: Row) {
-    // Formatear fechas para CSV
-    const formatDate = (dateStr: string | null) => {
-      if (!dateStr) return "—";
-      return new Date(dateStr).toLocaleString("en-NZ", {
-        timeZone: "Pacific/Auckland",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    };
+  // Helper function to format dates
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "—";
+    return new Date(dateStr).toLocaleString("en-NZ", {
+      timeZone: "Pacific/Auckland",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
-    // Datos del pallet para CSV
+  // BarTender folder connection functions
+  async function handleConnectFolder() {
+    try {
+      const picked = await connectBarTenderFolder();
+      if (picked && await ensureWritePermission(picked)) {
+        setDir(picked);
+        alert('BarTender folder connected! Future prints will save directly to C:\\BarTender\\input');
+      } else {
+        alert('Could not get permission for that folder.');
+      }
+    } catch (error) {
+      console.error('Error connecting folder:', error);
+      alert('Error connecting to BarTender folder.');
+    }
+  }
+
+  // Build CSV content for a pallet
+  function buildPalletCsv(row: Row): string {
     const csvData = [
       ["Field", "Value"],
       ["Pallet Number", row.number?.toString() ?? shortId(row.id)],
@@ -159,31 +192,71 @@ export default function NewPalletsTable() {
       ["Status", row.closed_at ? "Closed" : "Open"],
     ];
 
-    // Convertir a CSV
-    const csvContent = csvData.map(row => row.map(field => `"${field}"`).join(",")).join("\n");
-    
-    // Crear archivo y descargar
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `pallet_${row.number || shortId(row.id)}_${Date.now()}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    return csvData.map(row => row.map(field => `"${field}"`).join(",")).join("\n");
+  }
+
+  async function downloadCSV(row: Row) {
+    const csv = buildPalletCsv(row);
+    const fileName = `pallet_${row.number || shortId(row.id)}_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
+
+    try {
+      if (dir && await ensureWritePermission(dir)) {
+        await saveCsvToBarTender(dir, fileName, csv);
+        alert('Saved to BarTender\\input folder!');
+        return;
+      }
+      // Fallback: descarga normal
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.style.visibility = 'hidden';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      alert('Saved to Downloads because BarTender folder is not connected.');
+    } catch (e: any) {
+      console.error('Error saving file:', e);
+      alert('Error saving file. Downloaded to default folder instead.');
+      // Emergency fallback
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   }
 
   return (
     <div className="mt-6">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xl font-semibold">New Pallets Control</h2>
-        <button
-          onClick={addNew}
-          className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white"
-        >
-          Add pallet
-        </button>
+        <div className="flex gap-2">
+          {!dir && (
+            <button
+              onClick={handleConnectFolder}
+              className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-sm"
+              title="Connect to C:\BarTender\input folder for direct saving"
+            >
+              📁 Connect BarTender
+            </button>
+          )}
+          {dir && (
+            <span className="px-3 py-1.5 text-sm text-green-400 flex items-center gap-1">
+              ✅ BarTender Connected
+            </span>
+          )}
+          <button
+            onClick={addNew}
+            className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            Add pallet
+          </button>
+        </div>
       </div>
 
       <div className="bg-slate-900 rounded-xl shadow-lg overflow-hidden border border-slate-800">

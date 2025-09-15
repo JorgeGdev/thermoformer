@@ -15,8 +15,7 @@ function json(obj: unknown, status = 200) {
 
 const NZ_TZ = "Pacific/Auckland";
 function nowInNZ() {
-  const now = new Date();
-  return new Date(now.toLocaleString("en-NZ", { timeZone: NZ_TZ }));
+  return new Date(new Date().toLocaleString("en-US", { timeZone: NZ_TZ }));
 }
 function nzRangeToUTC(range: "today" | "week" | "month") {
   const nzNow = nowInNZ();

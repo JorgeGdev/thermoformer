@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { type Size } from "../config/sizes";
 
+
 type Shift = "DS" | "TW" | "NS";
 
 interface Props {
@@ -9,8 +10,8 @@ interface Props {
 
 const btnBig =
   "w-full h-[90px] rounded-xl text-white font-semibold text-base " +
-  "bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 " +
-  "shadow-lg shadow-blue-900/20 hover:from-blue-400 hover:via-blue-600 hover:to-blue-800 " +
+  "bg-gradient-to-r from-slate-500 via-slate-600 to-slate-700 " +
+  "shadow-lg shadow-slate-900/20 hover:from-slate-400 hover:via-slate-600 hover:to-slate-800 " +
   "active:scale-[0.98] transition flex items-center justify-center";
 
 const chip =
@@ -112,7 +113,7 @@ export default function GetISOBySize({ size }: Props) {
               className={
                 "px-5 py-2.5 rounded-lg border text-sm " +
                 (shift === s
-                  ? "bg-blue-600 text-white border-blue-500"
+                  ? "bg-slate-600 text-white border-slate-500"
                   : "bg-white/5 border-white/10 hover:bg-white/10")
               }
             >
@@ -141,7 +142,7 @@ export default function GetISOBySize({ size }: Props) {
         </button>
       </div>
 
-      <p className="text-lg opacity-70">
+      <p className="text-xl text-white opacity-90">
         The system will use the latest roll data from the selected thermoformer and assign pallet/position automatically.
       </p>
 

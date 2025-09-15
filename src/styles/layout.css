@@ -1,0 +1,246 @@
+/* ===========================
+   1) Styles moved from <style>
+   =========================== */
+
+/* Dark Mode Toggle Styles */
+.dark-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  width: 52px;
+  height: 28px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+.dark-toggle.dark {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  box-shadow: 0 2px 8px rgba(30, 41, 59, 0.4);
+}
+.dark-toggle-slider {
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.dark-toggle.dark .dark-toggle-slider {
+  transform: translateX(24px);
+  background: #64748b;
+}
+.toggle-icon { width: 12px; height: 12px; transition: all 0.4s ease; }
+.sun-icon { color: #f59e0b; opacity: 1; }
+.moon-icon { color: #e2e8f0; opacity: 0; position: absolute; }
+.dark .sun-icon { opacity: 0; transform: rotate(180deg); }
+.dark .moon-icon { opacity: 1; transform: rotate(0deg); }
+.dark-toggle:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4); }
+.dark-toggle.dark:hover { box-shadow: 0 4px 12px rgba(30, 41, 59, 0.6); }
+.dark-toggle:active { transform: scale(0.95); }
+
+.mode-text { margin-left: 8px; font-size: 0.75rem; font-weight: 500; transition: all 0.3s ease; display: none; }
+@media (min-width: 640px) { .mode-text { display: block; } }
+.mode-text.light { color: #f59e0b; }
+.mode-text.dark { color: #94a3b8; }
+
+/* Auto-hide Sidebar Styles for Desktop */
+@media (min-width: 1024px) {
+  .sidebar-auto-hide {
+    width: 4px;
+    transform: translateX(-220px);
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-right: none;
+    background: transparent;
+  }
+  .sidebar-auto-hide::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-radius: 0 2px 2px 0;
+    opacity: 0.4;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .sidebar-auto-hide:hover::before { opacity: 1; box-shadow: 0 0 8px rgba(59,130,246,0.4); }
+  .sidebar-auto-hide:hover,
+  .sidebar-auto-hide.show {
+    width: 224px; transform: translateX(0);
+    background: white; border-right: 1px solid rgb(226 232 240);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+    transition: all 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+  }
+  .dark .sidebar-auto-hide:hover,
+  .dark .sidebar-auto-hide.show {
+    background: rgb(30 41 59);
+    border-right: 1px solid rgb(51 65 85);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.25);
+  }
+  .main-content-shift { margin-left: 4px; transition: margin-left 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
+}
+
+/* Footer Styles */
+.footer {
+  background: linear-gradient(135deg, var(--color-slate-50) 0%, var(--color-slate-100) 100%);
+  border-top: 1px solid var(--color-slate-200);
+  transition: all 0.3s ease;
+}
+.dark .footer {
+  background: linear-gradient(135deg, var(--color-slate-900) 0%, var(--color-slate-800) 100%);
+  border-top: 1px solid var(--color-slate-700);
+}
+.footer-content {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.5rem; padding: 0.75rem 1rem; font-size: 0.75rem;
+  color: rgb(100 116 139); transition: color 0.3s ease;
+}
+.dark .footer-content { color: rgb(148 163 184); }
+.footer-heart { color: rgb(239 68 68); animation: heartbeat 2s ease-in-out infinite; }
+.footer-link {
+  color: rgb(59 130 246); text-decoration: none; font-weight: 500;
+  transition: all 0.3s ease; padding: 0.25rem 0.5rem; border-radius: 0.375rem;
+}
+.footer-link:hover { color: rgb(37 99 235); background: rgb(239 246 255); transform: translateY(-1px); }
+.dark .footer-link { color: rgb(96 165 250); }
+.dark .footer-link:hover { color: rgb(147 197 253); background: rgb(30 58 138 / 0.2); }
+@keyframes heartbeat { 0%,50%,100%{transform:scale(1)} 25%{transform:scale(1.1)} 75%{transform:scale(1.05)} }
+
+/* ===========================
+   2) Minimal utility layer (Tailwind-like)
+   Only the classes used in this file.
+   =========================== */
+
+/* Layout */
+.h-full { height: 100%; }
+.h-screen { height: 100vh; }
+.w-56 { width: 14rem; }
+.h-full { height: 100%; }
+.min-w-0 { min-width: 0; }
+.flex { display: flex; }
+.flex-1 { flex: 1 1 0%; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-3 { gap: 0.75rem; }
+.overflow-auto { overflow: auto; }
+
+/* Positioning / z-index / transforms */
+.fixed { position: fixed; }
+.relative { position: relative; }
+.lg\:relative { position: relative; }
+.inset-0 { top:0; right:0; bottom:0; left:0; }
+.top-0 { top: 0; }
+.left-0 { left: 0; }
+.z-40 { z-index: 40; }
+.z-50 { z-index: 50; }
+.transform { transform: translateZ(0); will-change: transform; }
+.-translate-x-full { transform: translateX(-100%); }
+.translate-x-0 { transform: translateX(0); }
+
+/* Display helpers and responsive visibility */
+.hidden { display: none; }
+.block { display: block; }
+.lg\:hidden { }
+.lg\:block { }
+.lg\:flex { }
+.lg\:flex-col { }
+.lg\:shrink-0 { }
+
+/* We define responsive variants via media queries */
+@media (min-width: 1024px) {
+  .lg\:hidden { display: none !important; }
+  .lg\:block { display: block !important; }
+  .lg\:flex { display: flex !important; }
+  .lg\:flex-col { flex-direction: column !important; }
+  .lg\:relative { position: relative !important; }
+  .lg\:shrink-0 { flex-shrink: 0 !important; }
+}
+
+/* Spacing */
+.p-2 { padding: 0.5rem; }
+.p-4 { padding: 1rem; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.h-14 { height: 3.5rem; }
+.w-5 { width: 1.25rem; }
+.h-5 { height: 1.25rem; }
+
+/* Typography */
+.text-base { font-size: 1rem; line-height: 1.5rem; }
+.text-xs { font-size: 0.75rem; line-height: 1rem; }
+.text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+.text-center { text-align: center; }
+.font-medium { font-weight: 500; }
+.font-bold { font-weight: 700; }
+
+/* Colors (light) */
+.bg-slate-50 { background-color: #f8fafc; }
+.bg-slate-800 { background-color: #1f2937; }
+.text-slate-900 { color: #0f172a; }
+.text-slate-600 { color: #475569; }
+.text-slate-500 { color: #64748b; }
+.text-amber-50 { color: #fffbeb; }
+.bg-black\/50 { background-color: rgba(0,0,0,0.5); }
+
+/* Colors (dark variants) */
+.dark .dark\:bg-slate-900 { background-color: #0f172a; }
+.dark .dark\:bg-slate-800 { background-color: #1e293b; }
+.dark .dark\:text-slate-100 { color: #f1f5f9; }
+.dark .dark\:text-slate-400 { color: #94a3b8; }
+
+/* Borders */
+.border-r { border-right-width: 1px; border-right-style: solid; }
+.border-b { border-bottom-width: 1px; border-bottom-style: solid; }
+.border-slate-200 { border-color: #e2e8f0; }
+.border-slate-600 { border-color: #475569; }
+.dark .dark\:border-slate-700 { border-color: #334155; }
+.dark .dark\:border-slate-600 { border-color: #475569; }
+
+/* Rounding */
+.rounded-md { border-radius: 0.375rem; }
+
+/* Hover color utilities */
+.hover\:text-slate-700:hover { color: #334155; }
+.dark .dark\:hover\:text-slate-200:hover { color: #e2e8f0; }
+
+/* Focus ring utilities */
+.focus\:outline-none:focus { outline: none; }
+.focus\:ring-2:focus { box-shadow: 0 0 0 2px rgba(59,130,246,0.6); }
+.focus\:ring-blue-500:focus { box-shadow: 0 0 0 2px #3b82f6; }
+
+/* Transitions */
+.transition-colors { transition-property: color, background-color, border-color, fill, stroke; }
+.transition-all { transition-property: all; }
+.duration-300 { transition-duration: 300ms; }
+.ease-in-out { transition-timing-function: ease-in-out; }
+
+/* Scroll lock helper used by JS */
+.overflow-hidden { overflow: hidden; }
+
+header.bg-slate-800 {
+  /* Light mode look (elige el que prefieras) */
+  background: linear-gradient(135deg, var(--color-slate-50) 0%, var(--color-slate-100) 100%);
+  border-top: 1px solid var(--color-slate-200);
+  transition: all 0.3s ease;
+}
+
+.dark header.bg-slate-800 {
+  background: linear-gradient(135deg, var(--color-slate-900) 0%, var(--color-slate-800) 100%);
+  border-top: 1px solid var(--color-slate-700);
+}
+
+
+
+
+
+
+

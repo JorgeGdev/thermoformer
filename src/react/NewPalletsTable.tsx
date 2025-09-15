@@ -292,7 +292,7 @@ export default function NewPalletsTable() {
                       </button>
                       <button
                         onClick={() => del(r.id)}
-                        className="px-2 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-xs"
+                        className="px-2 py-1 rounded bg-[#24b308] hover:bg-[#1e8a06] text-white text-xs"
                         title="Delete pallet"
                       >
                         Delete

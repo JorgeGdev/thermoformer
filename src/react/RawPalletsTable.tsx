@@ -339,7 +339,7 @@ export default function RawPalletsTable() {
                     <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => del(r.id)}
-                        className="px-2 py-1 rounded bg-[#193DBC] hover:bg-[#4899FF] text-white"
+                        className="px-2 py-1 rounded bg-[#05b348] hover:bg-[#07fa50] text-white"
                       >
                         Delete
                       </button>

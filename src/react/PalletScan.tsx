@@ -115,8 +115,8 @@ export default function PalletScan() {
         <button
           onClick={() => fileRef.current?.click()}
           className="w-full sm:w-[260px] h-[120px] rounded-xl text-white font-semibold text-lg
-                     bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700
-                     shadow-lg hover:from-blue-400 hover:to-blue-800 active:scale-[0.98] transition grid place-items-center">
+                     bg-gradient-to-r from-slate-500 via-slate-600 to-slate-700
+                     shadow-lg hover:from-slate-400 hover:to-slate-800 active:scale-[0.98] transition grid place-items-center ">
           {busy ? "Scanning..." : "Scan Pallet Sticker"}
         </button>
         <input
@@ -158,7 +158,7 @@ export default function PalletScan() {
 
       <div className="flex items-center gap-3">
         <button onClick={save} disabled={busy}
-                className="rounded px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">
+                className="rounded px-4 py-2 bg-slate-600 text-white hover:bg-slate-700 disabled:opacity-50">
           Save
         </button>
         {msg && <span className="text-sm opacity-80">{msg}</span>}
